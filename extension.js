@@ -1,5 +1,5 @@
 const {
-  spawn
+  fork
 } = require('node:child_process');
 const {
   JSONRPCClient,
@@ -14,11 +14,12 @@ try {
   console.warn('hbuilderx not found')
 }
 
-const child = spawn('node', [
-  path.join(__dirname, 'dist/agent.js'),
+const child = fork(path.join(__dirname, 'dist/agent.js'), [
   // '--node-ipc', '--stdio' or '--socket={number}'
   '--stdio'
-])
+], {
+  stdio: 'pipe'
+})
 
 const client = new JSONRPCClient((jsonRPCRequest) => {
   console.log(jsonRPCRequest)
