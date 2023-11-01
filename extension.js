@@ -158,23 +158,33 @@ async function get () {
   const uri = document.uri.toString()
   const text = document.getText()
   const languageId = document.languageId
-  client.notify('textDocument/didOpen', {
-    textDocument: {
-      text,
-      languageId,
-      uri,
-      version: 0
-    }
-  })
-  client.notify('textDocument/didChange', {
-    contentChanges: [{
-      text,
-    }],
-    textDocument: {
-      uri,
-      version: 0
-    }
-  })
+  // client.notify('textDocument/didOpen', {
+  //   textDocument: {
+  //     text,
+  //     languageId,
+  //     uri,
+  //     version: 0
+  //   }
+  // })
+  // await client.request('setEditorInfo', {
+  //   editorInfo: {
+  //     name: 'HBuilderX',
+  //     version: ''
+  //   },
+  //   editorPluginInfo: {
+  //     name: 'Copilot for HBuilderX',
+  //     version: ''
+  //   }
+  // })
+  // client.notify('textDocument/didChange', {
+  //   contentChanges: [{
+  //     text,
+  //   }],
+  //   textDocument: {
+  //     uri,
+  //     version: 0
+  //   }
+  // })
   const position = editor.selection.start
   const res = await client.request('getCompletionsCycling', {
     doc: {
