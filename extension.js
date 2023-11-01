@@ -148,6 +148,8 @@ async function get () {
       } catch (error) {
 
       }
+    } else {
+      isSignedIn = true
     }
   }
   // await client.request('getVersion', {})
