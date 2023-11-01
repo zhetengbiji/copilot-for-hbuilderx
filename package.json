@@ -1,0 +1,48 @@
+{
+  "id": "copilot-for-hbuilderx",
+  "name": "copilot-for-hbuilderx",
+  "description": "Copilot for HBuilderX",
+  "displayName": "Copilot for HBuilderX",
+  "version": "0.1.0",
+  "publisher": "zhetengbiji",
+  "engines": {
+    "HBuilderX": "^2.7.0",
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:copilot.get",
+    "onCommand:copilot.signout"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "copilot.get",
+        "title": "Copilot Get"
+      },
+      {
+        "command": "copilot.signout",
+        "title": "Copilot Signout"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "copilot.get",
+          "title": "Copilot Get",
+          "when": "editorTextFocus"
+        }
+      ]
+    }
+  },
+  "extensionDependencies": [],
+  "dependencies": {
+    "json-rpc-2.0": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.83.1"
+  }
+}
