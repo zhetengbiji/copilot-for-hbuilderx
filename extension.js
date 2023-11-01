@@ -7,6 +7,9 @@ const {
 } = require('json-rpc-2.0')
 const path = require('node:path')
 const code = require('vscode')
+/**
+ * @type {import('hbuilderx')}
+ */
 let hx
 try {
   hx = require('hbuilderx')
@@ -100,9 +103,12 @@ function positionToNumber (position, source) {
 }
 
 async function get () {
-  // const editor = await code.window.getActiveTextEditor()
-  // const workspaceFolder = editor.document.workspaceFolder
-  const workspaceFolder = code.workspace.workspaceFolders[0].uri.fsPath
+  const editor = code.window.activeTextEditor
+  let workspaceFolder = code.workspace.workspaceFolders[0].uri.fsPath
+  if (hx) {
+    const editor = await hx.window.getActiveTextEditor()
+    workspaceFolder = editor.document.workspaceFolder.uri.path
+  }
   console.log('workspaceFolder:', workspaceFolder)
   let item = workspaces[workspaceFolder]
   if (!item) {
@@ -154,9 +160,9 @@ async function get () {
     }
   }
   // await client.request('getVersion', {})
-  const editor = code.window.activeTextEditor
   const document = editor.document
   const uri = document.uri.toString()
+  const fileName = document.fileName
   const text = document.getText()
   const languageId = document.languageId
   // client.notify('textDocument/didOpen', {
@@ -199,9 +205,9 @@ async function get () {
       tabSize: 4,
       version: 0,
       languageId,
-      uri: document.fileName,
-      path: document.fileName,
-      relativePath: path.relative(workspaceFolder, document.fileName)
+      uri: fileName,
+      path: fileName,
+      relativePath: path.relative(workspaceFolder, fileName)
     }
   })
   console.log('res: ', res)
