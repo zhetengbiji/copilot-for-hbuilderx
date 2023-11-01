@@ -26,10 +26,11 @@ const child = fork(path.join(__dirname, 'dist/agent.js'), [
 
 const client = new JSONRPCClient((jsonRPCRequest) => {
   console.log(jsonRPCRequest)
-  const json = JSON.stringify(jsonRPCRequest)
+  const json = Buffer.from(JSON.stringify(jsonRPCRequest), 'utf8')
   const length = json.length
   const header = `Content-Length: ${length}\r\n\r\n`
-  child.stdin.write(header + json)
+  child.stdin.write(header)
+  child.stdin.write(json)
 })
 
 const server = new JSONRPCServer()
@@ -54,12 +55,12 @@ child.stdout.on('data', (data) => {
     if (res) {
       const index = all.indexOf('\r\n\r\n')
       const header = all.substring(0, index)
-      const other = all.substring(index + 4)
+      const other = Buffer.from(all.substring(index + 4), 'utf8')
       const length = parseInt(res[1])
       if (other.length >= length) {
-        all = other
-        const body = all.substring(0, length)
-        all = all.substring(length)
+        all = other.toString('utf8')
+        const body = other.subarray(0, length).toString('utf8')
+        all = other.subarray(length).toString('utf8')
         const obj = JSON.parse(body)
         if (obj.id) {
           client.receive(obj)
