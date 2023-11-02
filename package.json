@@ -12,7 +12,12 @@
   "categories": [
     "Other"
   ],
-  "main": "./extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "main": "./out/index.js",
   "activationEvents": [
     "onCommand:copilot.get",
     "onCommand:copilot.signout"
@@ -43,6 +48,8 @@
     "json-rpc-2.0": "^1.6.0"
   },
   "devDependencies": {
-    "@types/vscode": "^1.83.1"
+    "@types/node": "^20.8.10",
+    "@types/vscode": "^1.83.1",
+    "typescript": "^5.2.2"
   }
 }

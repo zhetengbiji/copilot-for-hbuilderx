@@ -1,23 +1,16 @@
-const {
-  fork
-} = require('node:child_process');
-const {
-  JSONRPCClient,
-  JSONRPCServer
-} = require('json-rpc-2.0')
-const path = require('node:path')
-const code = require('vscode')
-/**
- * @type {import('hbuilderx')}
- */
-let hx
+import { fork } from 'node:child_process'
+import { JSONRPCClient, JSONRPCServer } from 'json-rpc-2.0'
+import path = require('node:path')
+import * as vscode from 'vscode'
+// @ts-ignore
+let hbx: import('hbuilderx')
 try {
-  hx = require('hbuilderx')
+  hbx = require('hbuilderx')
 } catch (error) {
   console.warn('hbuilderx not found')
 }
 
-const child = fork(path.join(__dirname, 'dist/agent.js'), [
+const child = fork(path.join(__dirname, '../dist/agent.js'), [
   // '--node-ipc', '--stdio' or '--socket={number}'
   '--stdio'
 ], {
@@ -29,8 +22,8 @@ const client = new JSONRPCClient((jsonRPCRequest) => {
   const json = Buffer.from(JSON.stringify(jsonRPCRequest), 'utf8')
   const length = json.length
   const header = `Content-Length: ${length}\r\n\r\n`
-  child.stdin.write(header)
-  child.stdin.write(json)
+  child.stdin!.write(header)
+  child.stdin!.write(json)
 })
 
 const server = new JSONRPCServer()
@@ -45,7 +38,7 @@ server.addMethod('statusNotification', (params) => {
 })
 
 let all = ''
-child.stdout.on('data', (data) => {
+child.stdout!.on('data', (data) => {
   console.log('stdout: ', data.toString())
   const content = data.toString()
   all += content
@@ -76,24 +69,18 @@ child.stdout.on('data', (data) => {
   }
 })
 
-child.stdout.on('end', () => {
+child.stdout!.on('end', () => {
   console.log('end')
 })
 
-child.stderr.on('data', (err) => {
+child.stderr!.on('data', (err) => {
   console.log('err: ', err.toString())
 })
 
-const workspaces = {}
+const workspaces: Record<string, {}> = {}
 let isSignedIn = false
 
-/**
- * 
- * @param {code.Position} position 
- * @param {string} document
- * @returns {number}
- */
-function positionToNumber (position, source) {
+function positionToNumber(position: vscode.Position, source: string): number {
   const lines = source.split('\n')
   let index = 0
   for (let i = 0; i < position.line; i++) {
@@ -103,11 +90,11 @@ function positionToNumber (position, source) {
   return index
 }
 
-async function get () {
-  const editor = code.window.activeTextEditor
-  let workspaceFolder = code.workspace.workspaceFolders[0].uri.fsPath
-  if (hx) {
-    const editor = await hx.window.getActiveTextEditor()
+async function get() {
+  const editor = vscode.window.activeTextEditor!
+  let workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath
+  if (hbx) {
+    const editor = await hbx.window.getActiveTextEditor()
     workspaceFolder = editor.document.workspaceFolder.uri.path
   }
   console.log('workspaceFolder:', workspaceFolder)
@@ -148,7 +135,7 @@ async function get () {
 
         })
         // {"status":"PromptUserDeviceFlow","userCode":"XXXX-XXXX","verificationUri":"https://github.com/login/device","expiresIn":899,"interval":5}
-        code.window.showInformationMessage(`请在浏览器中打开 ${res.verificationUri} 并输入 ${res.userCode} 进行登录`)
+        vscode.window.showInformationMessage(`请在浏览器中打开 ${res.verificationUri} 并输入 ${res.userCode} 进行登录`)
         await client.request('signInConfirm', {
           userCode: res.userCode
         })
@@ -229,44 +216,44 @@ async function get () {
     const start = range.start
     const end = range.end
     const completionText = completion.text.trimEnd()
-    if (hx) {
-      const editor = await hx.window.getActiveTextEditor()
+    if (hbx) {
+      const editor = await hbx.window.getActiveTextEditor()
       const range = {
         start: positionToNumber(start, text),
         end: positionToNumber(end, text)
       }
-      await editor.edit((editBuilder) => {
+      await editor.edit((editBuilder: any) => {
         editBuilder.replace(range, completionText)
       })
     } else {
       // TODO HBuilderX 兼容有问题
       await editor.edit((editBuilder) => {
-        editBuilder.replace(new code.Range(new code.Position(start.line, start.character), new code.Position(end.line, end.character)), completionText)
+        editBuilder.replace(new vscode.Range(new vscode.Position(start.line, start.character), new vscode.Position(end.line, end.character)), completionText)
       })
     }
   }
 }
 
-async function signout () {
+async function signout() {
   await client.request('signOut', {})
   isSignedIn = false
-  code.showInformationMessage('已退出登录')
+  vscode.window.showInformationMessage('已退出登录')
 }
 
-function activate (context) {
+function activate(context: vscode.ExtensionContext) {
   // start()
   console.log('activate')
-  let command_get = code.commands.registerCommand('copilot.get', () => {
+  let command_get = vscode.commands.registerCommand('copilot.get', () => {
     get()
   })
   context.subscriptions.push(command_get)
-  let command_signout = code.commands.registerCommand('copilot.signout', () => {
+  let command_signout = vscode.commands.registerCommand('copilot.signout', () => {
     signout()
   })
   context.subscriptions.push(command_signout)
 }
 
-function deactivate () { }
+function deactivate() { }
 
 module.exports = {
   activate,
