@@ -10,6 +10,8 @@ try {
   console.warn('hbuilderx not found')
 }
 
+let statusBarItem: vscode.StatusBarItem
+
 const child = fork(path.join(__dirname, '../dist/agent.js'), [
   // '--node-ipc', '--stdio' or '--socket={number}'
   '--stdio'
@@ -240,17 +242,26 @@ async function signout() {
   vscode.window.showInformationMessage('已退出登录')
 }
 
-function activate(context: vscode.ExtensionContext) {
-  // start()
-  console.log('activate')
-  let command_get = vscode.commands.registerCommand('copilot.get', () => {
+async function checkStatus() {
+
+}
+
+function activate({ subscriptions }: vscode.ExtensionContext) {
+  subscriptions.push(vscode.commands.registerCommand('copilot.get', () => {
     get()
-  })
-  context.subscriptions.push(command_get)
-  let command_signout = vscode.commands.registerCommand('copilot.signout', () => {
+  }))
+  subscriptions.push(vscode.commands.registerCommand('copilot.signout', () => {
     signout()
-  })
-  context.subscriptions.push(command_signout)
+  }))
+  const statusCommandId = 'copilot.status'
+  subscriptions.push(vscode.commands.registerCommand('copilot.status', () => {
+    checkStatus()
+  }))
+  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+  statusBarItem.command = statusCommandId
+  statusBarItem.text = 'Copilot'
+  subscriptions.push(statusBarItem)
+  statusBarItem.show()
 }
 
 function deactivate() { }
