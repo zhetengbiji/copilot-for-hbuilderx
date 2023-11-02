@@ -224,16 +224,22 @@ async function get () {
     //   uuid: completion.uuid
     // })
     const position = completion.position
-    const range = completion
+    const range = completion.range
+    const start = range.start
+    const end = range.end
     if (hx) {
       const editor = await hx.window.getActiveTextEditor()
+      const range = {
+        start: positionToNumber(start, text),
+        end: positionToNumber(end, text)
+      }
       await editor.edit((editBuilder) => {
-        editBuilder.replace(positionToNumber(position, text), completion.text)
+        editBuilder.replace(range, completion.text)
       })
     } else {
       // TODO HBuilderX 兼容有问题
       await editor.edit((editBuilder) => {
-        editBuilder.replace(new code.Position(position.line, position.character), completion.text)
+        editBuilder.replace(new code.Range(new code.Position(start.line, start.character), new code.Position(end.line, end.character)), completion.text)
       })
     }
   }
