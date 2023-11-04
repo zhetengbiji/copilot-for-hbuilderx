@@ -296,7 +296,6 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
       position = editor.selection.start
       const items: vscode.InlineCompletionItem[] = []
       if (status === STATUS.disable) {
-        signin()
         return { items }
       }
       updateStatus(true)
