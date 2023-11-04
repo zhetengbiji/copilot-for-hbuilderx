@@ -35,35 +35,35 @@
       "copilot-enable": {
         "description": "copilot enable",
         "default": {
-          "fontPath": "iconfont.woff",
+          "fontPath": "iconfont.ttf",
           "fontCharacter": "\\E60F"
         }
       },
       "loading": {
         "description": "copilot loading",
         "default": {
-          "fontPath": "iconfont.woff",
+          "fontPath": "iconfont.ttf",
           "fontCharacter": "\\E627"
         }
       },
       "copilot-loading": {
         "description": "copilot loading",
         "default": {
-          "fontPath": "iconfont.woff",
+          "fontPath": "iconfont.ttf",
           "fontCharacter": "\\E627"
         }
       },
       "copilot-warning": {
         "description": "copilot warning",
         "default": {
-          "fontPath": "iconfont.woff",
+          "fontPath": "iconfont.ttf",
           "fontCharacter": "\\E62C"
         }
       },
       "copilot-disable": {
         "description": "copilot disable",
         "default": {
-          "fontPath": "iconfont.woff",
+          "fontPath": "iconfont.ttf",
           "fontCharacter": "\\E62B"
         }
       }
