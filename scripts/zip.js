@@ -3,7 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const packageJson = require('../package.json')
 
-const tgzPath = path.join(__dirname, `../${packageJson.name}-v${packageJson.version}.tgz`)
+const tgzPath = path.join(__dirname, `../${packageJson.name}-${packageJson.version}.tgz`)
 
 execSync(`rm -rf ${__dirname}/../package`)
 
@@ -15,7 +15,7 @@ fs.writeFileSync(path.join(__dirname, '../package/package.json'), JSON.stringify
   devDependencies: undefined
 }), null, 2))
 
-execSync(`cd ${__dirname}/../package && zip -r ../${packageJson.name}-v${packageJson.version}.zip ./*`)
+execSync(`cd ${__dirname}/../package && zip -r ../${packageJson.name}-${packageJson.version}.zip ./*`)
 
 execSync(`rm -rf ${__dirname}/../package`)
 execSync(`rm -f ${tgzPath}`)
