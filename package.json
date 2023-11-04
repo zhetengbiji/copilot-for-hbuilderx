@@ -3,7 +3,7 @@
   "name": "copilot-for-hbuilderx",
   "description": "Copilot for HBuilderX",
   "displayName": "Copilot for HBuilderX",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "publisher": "zhetengbiji",
   "engines": {
     "HBuilderX": "^3.8.5",
