@@ -1,5 +1,4 @@
 import { fork } from 'node:child_process'
-// import { JSONRPCClient, JSONRPCServer } from 'json-rpc-2.0'
 import * as rpc from 'vscode-jsonrpc/node'
 import path = require('node:path')
 import * as vscode from 'vscode'
@@ -11,8 +10,6 @@ try {
   console.warn('hbuilderx not found')
 }
 
-const TIMEOUT = 1e3 * 60
-
 let statusBarItem: vscode.StatusBarItem
 
 const child = fork(path.join(__dirname, '../dist/agent.js'), [
@@ -21,36 +18,11 @@ const child = fork(path.join(__dirname, '../dist/agent.js'), [
 ], {
   stdio: 'pipe'
 })
-const logger = {
-  log(message: string) {
-    console.log(message)
-  },
-  error(message: string) {
-    console.error(message)
-  },
-  warn(message: string) {
-    console.warn(message)
-  },
-  info(message: string) {
-    console.info(message)
-  }
-}
-let connection = rpc.createMessageConnection(new rpc.StreamMessageReader(child.stdout!), new rpc.StreamMessageWriter(child.stdin!), logger)
+
+let connection = rpc.createMessageConnection(new rpc.StreamMessageReader(child.stdout!), new rpc.StreamMessageWriter(child.stdin!))
 connection.listen()
-// connection.inspect()
-// const client = new JSONRPCClient((jsonRPCRequest) => {
-//   console.log(jsonRPCRequest)
-//   const json = Buffer.from(JSON.stringify(jsonRPCRequest), 'utf8')
-//   const length = json.length
-//   const header = `Content-Length: ${length}\r\n\r\n`
-//   child.stdin!.write(header)
-//   child.stdin!.write(json)
-// })
 
 const client = {
-  timeout(timeout: number) {
-    return this
-  },
   request(method: string, params: any) {
     console.log('request: ', method, params)
     return connection.sendRequest<any>(method, params)
@@ -59,12 +31,11 @@ const client = {
 
   },
   notify(method: string, params: any) {
-    console.log('notify: ', method, params)
+    // console.log('notify: ', method, params)
     connection.sendNotification(method, params)
   }
 }
 
-// const server = new JSONRPCServer()
 const server = {
   addMethod(method: string, callback: (...params: any[]) => void) {
     connection.onRequest(method, callback)
@@ -80,57 +51,21 @@ server.addMethod('statusNotification', (params) => {
   console.log('statusNotification: ', params)
 })
 
-// let all = ''
-child.stdout!.on('data', (data) => {
-  console.log('stdout: ', data.toString())
-  // const content = data.toString()
-  // all += content
-  // let next = true
-  // while (next) {
-  //   const res = all.match(/Content-Length: (\d+)\r\n\r\n/)
-  //   if (res) {
-  //     const index = all.indexOf('\r\n\r\n')
-  //     const header = all.substring(0, index)
-  //     const other = Buffer.from(all.substring(index + 4), 'utf8')
-  //     const length = parseInt(res[1])
-  //     if (other.length >= length) {
-  //       all = other.toString('utf8')
-  //       const body = other.subarray(0, length).toString('utf8')
-  //       all = other.subarray(length).toString('utf8')
-  //       const obj = JSON.parse(body)
-  //       if (obj.id) {
-  //         client.receive(obj)
-  //       } else if (obj.method) {
-  //         server.receive(obj)
-  //       }
-  //     } else {
-  //       next = false
-  //     }
-  //   } else {
-  //     next = false
-  //   }
-  // }
-})
-
-// child.stdout!.on('end', () => {
-//   console.log('end')
-// })
-
-// child.stderr!.on('data', (err) => {
-//   console.log('err: ', err.toString())
+// child.stdout!.on('data', (data) => {
+//   console.log('stdout: ', data.toString())
 // })
 
 const workspaces: Record<string, {}> = {}
 
-function positionToNumber(position: vscode.Position, source: string): number {
-  const lines = source.split('\n')
-  let index = 0
-  for (let i = 0; i < position.line; i++) {
-    index += lines[i].length + 1
-  }
-  index += position.character
-  return index
-}
+// function positionToNumber(position: vscode.Position, source: string): number {
+//   const lines = source.split('\n')
+//   let index = 0
+//   for (let i = 0; i < position.line; i++) {
+//     index += lines[i].length + 1
+//   }
+//   index += position.character
+//   return index
+// }
 
 async function initWorkspace() {
   let workspaceFolder = '/'
@@ -146,7 +81,7 @@ async function initWorkspace() {
   console.log('workspaceFolder:', workspaceFolder)
   let item = workspaces[workspaceFolder]
   if (!item) {
-    await client.timeout(TIMEOUT).request('initialize', {
+    await client.request('initialize', {
       rootPath: workspaceFolder,
       rootUri: workspaceFolder,
       capabilities: {},
@@ -156,7 +91,7 @@ async function initWorkspace() {
         name: 'Copilot for HBuilderX'
       }
     })
-    await client.timeout(TIMEOUT).request('setEditorInfo', {
+    await client.request('setEditorInfo', {
       editorInfo: {
         name: 'HBuilderX',
         version: ''
@@ -174,7 +109,7 @@ async function initWorkspace() {
 
 async function signout() {
   client.rejectAllPendingRequests('cancel')
-  await client.timeout(TIMEOUT).request('signOut', {})
+  await client.request('signOut', {})
   updateStatus(STATUS.disable)
   vscode.window.showInformationMessage('已退出')
 }
@@ -222,7 +157,7 @@ async function checkStatus() {
   await initWorkspace()
   if (status === STATUS.disable) {
     updateStatus(true)
-    const res = await client.timeout(TIMEOUT).request('checkStatus', {
+    const res = await client.request('checkStatus', {
       // options: { localChecksOnly: true }
     })
     // {"status":"NotSignedIn"}
@@ -239,18 +174,18 @@ async function signin() {
     updateStatus(true)
     client.rejectAllPendingRequests('cancel')
     try {
-      const res = await client.timeout(TIMEOUT).request('checkStatus', {
+      const res = await client.request('checkStatus', {
         // options: { localChecksOnly: true }
       })
       // {"status":"NotSignedIn"}
       // {"status":"OK","user":"zhetengbiji"}
       if (res.status === 'NotSignedIn') {
-        const res = await client.timeout(TIMEOUT).request('signInInitiate', {
+        const res = await client.request('signInInitiate', {
 
         })
         // {"status":"PromptUserDeviceFlow","userCode":"XXXX-XXXX","verificationUri":"https://github.com/login/device","expiresIn":899,"interval":5}
         vscode.window.showInformationMessage(`请在浏览器中打开 ${res.verificationUri} 并输入 ${res.userCode} 进行登录`)
-        await client.timeout(res.expiresIn * 1e3).request('signInConfirm', {
+        await client.request('signInConfirm', {
           userCode: res.userCode
         })
         updateStatus(STATUS.enable)
@@ -373,7 +308,7 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
         const fileName = document.fileName
         const text = document.getText()
         const languageId = document.languageId
-        const res = await client.timeout(TIMEOUT).request('getCompletionsCycling', {
+        const res = await client.request('getCompletionsCycling', {
           doc: {
             source: text,
             position: {

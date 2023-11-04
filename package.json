@@ -28,9 +28,7 @@
         "title": "Copilot Status"
       }
     ],
-    "menus": {
-      
-    },
+    "menus": {},
     "icons": {
       "copilot-enable": {
         "description": "copilot enable",
@@ -71,11 +69,10 @@
   },
   "extensionDependencies": [],
   "dependencies": {
-    "json-rpc-2.0": "^1.6.0",
     "vscode-jsonrpc": "^8.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.8.10",
+    "@types/node": "^16",
     "@types/vscode": "^1.83.1",
     "typescript": "^5.2.2"
   }
