@@ -342,15 +342,26 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
     }
   }))
   const selector = [
+    'javascript',
+    'typescript',
+    'uts',
+    'css',
+    'scss',
+    'sass',
+    'less',
     'vue',
-    'javascript'
+    'nvue',
+    'uvue'
   ]
-  subscriptions.push(vscode.languages.registerCompletionItemProvider(selector, {
-    async provideCompletionItems(document, position, token, context) {
-      const array: vscode.CompletionItem[] = []
+  subscriptions.push(vscode.languages.registerInlineCompletionItemProvider(selector, {
+    async provideInlineCompletionItems(document, position, token, context) {
+      const editor = vscode.window.activeTextEditor!
+      // fix position
+      position = editor.selection.start
+      const items: vscode.InlineCompletionItem[] = []
       if (status === STATUS.disable) {
         signin()
-        return array
+        return { items }
       }
       updateStatus(true)
       try {
@@ -380,46 +391,30 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
         })
         console.log('res: ', res)
         const completions = res.completions
-        for (let index = 0; index < completions.length; index++) {
+        for (let index = 0; index < completions.length && index < 1; index++) {
           const completion = completions[index]
           // await client.request('notifyAccepted', {
           //   uuid: completion.uuid
           // })
           console.log('completion: ', completion)
           const position = completion.position
+          const positionLeft = position.character
           const range = completion.range
           const start = range.start
           const end = range.end
           const completionText = completion.text.trimEnd()
-          let codeRange: any
-          if (hbx && false) {
-            // const editor = await hbx.window.getActiveTextEditor()
-            codeRange = {
-              start: positionToNumber(start, text),
-              end: positionToNumber(end, text)
-            }
-            // await editor.edit((editBuilder: any) => {
-            //   editBuilder.replace(range, completionText)
-            // })
-          } else {
-            codeRange = new vscode.Range(new vscode.Position(start.line, start.character), new vscode.Position(end.line, end.character))
-            // TODO HBuilderX 兼容有问题
-            // await editor.edit((editBuilder) => {
-            //   editBuilder.replace(range, completionText)
-            // })
-          }
-          array.push({
-            label: completionText,
-            insertText: completionText,
+          let codeRange = new vscode.Range(new vscode.Position(start.line, positionLeft), new vscode.Position(end.line, end.character))
+          items.push({
+            insertText: completionText.substring(positionLeft),
             range: codeRange
           })
         }
       } catch (error) {
-
+        console.error(error)
       }
       updateStatus(false)
-      console.log('array: ', array)
-      return array
+      console.log('items: ', items.length)
+      return { items }
     }
   }))
 }
