@@ -199,7 +199,7 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
   }
   switch (statusOrLoading) {
     case STATUS.loading:
-      statusBarItem.text = '$(copilot-loading)'
+      statusBarItem.text = '$(loading~spin)'
       statusBarItem.tooltip = 'Copilot 加载中...'
       break
     case STATUS.warning:
