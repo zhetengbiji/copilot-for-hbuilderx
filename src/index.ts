@@ -1,7 +1,7 @@
 import { fork } from 'node:child_process'
 import * as rpc from 'vscode-jsonrpc/node'
 import path = require('node:path')
-import * as vscode from 'vscode'
+import vscode = require('vscode')
 // @ts-ignore
 let hbx: import('hbuilderx')
 try {

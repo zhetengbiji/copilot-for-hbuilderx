@@ -2,3 +2,7 @@
 out
 .vscode-test/
 *.vsix
+/*.tgz
+/*.zip
+/*.log
+/package

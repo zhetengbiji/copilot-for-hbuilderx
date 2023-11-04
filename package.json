@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "publisher": "zhetengbiji",
   "engines": {
-    "HBuilderX": "^2.7.0",
+    "HBuilderX": "^3.8.5",
     "vscode": "^1.74.0"
   },
   "categories": [
@@ -14,7 +14,9 @@
   ],
   "scripts": {
     "vscode:prepublish": "npm run build",
-    "build": "tsc -p ./",
+    "prepack": "npm run build",
+    "postpack": "node scripts/zip.js",
+    "build": "esbuild ./src/index.ts --bundle --outfile=out/index.js --external:vscode --format=cjs --platform=node --minify --drop:console",
     "watch": "tsc -watch -p ./"
   },
   "main": "./out/index.js",
@@ -74,6 +76,7 @@
   "devDependencies": {
     "@types/node": "^16",
     "@types/vscode": "^1.83.1",
+    "esbuild": "^0.19.5",
     "typescript": "^5.2.2"
   }
 }
