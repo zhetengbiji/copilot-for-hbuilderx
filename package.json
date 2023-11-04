@@ -19,38 +19,53 @@
   },
   "main": "./out/index.js",
   "activationEvents": [
-    "onCommand:copilot.get",
-    "onCommand:copilot.signout",
-    "onCommand:copilot.status"
+    "*"
   ],
   "contributes": {
     "commands": [
-      {
-        "command": "copilot.get",
-        "title": "Copilot Get"
-      },
-      {
-        "command": "copilot.signout",
-        "title": "Copilot Signout"
-      },
       {
         "command": "copilot.status",
         "title": "Copilot Status"
       }
     ],
     "menus": {
-      "editor/context": [
-        {
-          "command": "copilot.get",
-          "title": "Copilot Get",
-          "when": "editorTextFocus"
+      
+    },
+    "icons": {
+      "copilot-enable": {
+        "description": "copilot enable",
+        "default": {
+          "fontPath": "iconfont.woff",
+          "fontCharacter": "\\E60F"
         }
-      ]
+      },
+      "copilot-loading": {
+        "description": "copilot loading",
+        "default": {
+          "fontPath": "iconfont.woff",
+          "fontCharacter": "\\E627"
+        }
+      },
+      "copilot-warning": {
+        "description": "copilot warning",
+        "default": {
+          "fontPath": "iconfont.woff",
+          "fontCharacter": "\\E62C"
+        }
+      },
+      "copilot-disable": {
+        "description": "copilot disable",
+        "default": {
+          "fontPath": "iconfont.woff",
+          "fontCharacter": "\\E62B"
+        }
+      }
     }
   },
   "extensionDependencies": [],
   "dependencies": {
-    "json-rpc-2.0": "^1.6.0"
+    "json-rpc-2.0": "^1.6.0",
+    "vscode-jsonrpc": "^8.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.10",
