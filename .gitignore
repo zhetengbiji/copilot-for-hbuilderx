@@ -6,3 +6,4 @@ out
 /*.zip
 /*.log
 /package
+.DS_Store
