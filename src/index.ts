@@ -205,7 +205,7 @@ async function signin() {
 
 async function statusClick() {
   const message = `是否${status === STATUS.enable ? '退出' : '登录'} Copilot？`
-  const res = await hbx ? hbx.window.showInformationMessage(message, ['是', '否']) : vscode.window.showInformationMessage(message, '是', '否')
+  const res = await (hbx ? hbx.window.showInformationMessage(message, ['是', '否']) : vscode.window.showInformationMessage(message, '是', '否'))
   if (res === '是') {
     status === STATUS.enable ? signout() : signin()
   }
