@@ -1,9 +1,9 @@
 {
   "id": "copilot-for-hbuilderx",
   "name": "copilot-for-hbuilderx",
-  "description": "Copilot for HBuilderX",
-  "displayName": "Copilot for HBuilderX",
-  "version": "0.2.1",
+  "description": "Your AI pair programmer",
+  "displayName": "GitHub Copilot",
+  "version": "0.2.3",
   "publisher": "zhetengbiji",
   "engines": {
     "HBuilderX": "^3.8.5",
