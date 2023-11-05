@@ -88,7 +88,7 @@ async function initWorkspace() {
       trace: 'off',
       processId: process.pid,
       clientInfo: {
-        name: 'Copilot for HBuilderX'
+        name: 'GitHub Copilot for HBuilderX'
       }
     })
     await client.request('setEditorInfo', {
@@ -97,7 +97,7 @@ async function initWorkspace() {
         version: ''
       },
       editorPluginInfo: {
-        name: 'Copilot for HBuilderX',
+        name: 'GitHub Copilot for HBuilderX',
         version: ''
       }
     })
@@ -135,19 +135,19 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
   switch (statusOrLoading) {
     case STATUS.loading:
       statusBarItem.text = '$(loading~spin)'
-      statusBarItem.tooltip = 'Copilot 加载中...'
+      statusBarItem.tooltip = 'GitHub Copilot 加载中...'
       break
     case STATUS.warning:
       statusBarItem.text = '$(copilot-warning)'
-      statusBarItem.tooltip = 'Copilot 加载出错'
+      statusBarItem.tooltip = 'GitHub Copilot 加载出错'
       break
     case STATUS.disable:
       statusBarItem.text = '$(copilot-disable)'
-      statusBarItem.tooltip = 'Copilot 未启用'
+      statusBarItem.tooltip = 'GitHub Copilot 未启用'
       break
     case STATUS.enable:
       statusBarItem.text = '$(copilot-enable)'
-      statusBarItem.tooltip = 'Copilot 已启用'
+      statusBarItem.tooltip = 'GitHub Copilot 已启用'
       break
   }
 }
@@ -326,7 +326,7 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
         })
         console.log('res: ', res)
         const completions = res.completions
-        for (let index = 0; index < completions.length && index < 1; index++) {
+        for (let index = 0; index < completions.length; index++) {
           const completion = completions[index]
           // await client.request('notifyAccepted', {
           //   uuid: completion.uuid
