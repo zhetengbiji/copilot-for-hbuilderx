@@ -27,7 +27,7 @@
     "configuration": {
       "title": "GitHub Copilot",
       "properties": {
-        "copilot.status": {
+        "GithubCopilot.status.show": {
           "type": "string",
           "default": "auto",
           "description": "状态显示",
@@ -41,6 +41,11 @@
             "仅图标",
             "图标+文本"
           ]
+        },
+        "GithubCopilot.editor.enableAutoCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用自动补全"
         }
       }
     },

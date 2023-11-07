@@ -134,7 +134,7 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
     }
   }
   const config = vscode.workspace.getConfiguration()
-  const statusConfig = config.get('copilot.status')
+  const statusConfig = config.get('GithubCopilot.status.show')
   const fixString = (statusConfig === 'icon+text' || (statusConfig !== 'icon' && isWin)) ? 'Copilot' : ''
   switch (statusOrLoading) {
     case STATUS.loading:
@@ -228,7 +228,7 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
   statusBarItem.show()
   checkStatus()
   subscriptions.push(vscode.workspace.onDidChangeConfiguration(async function (event) {
-    event.affectsConfiguration('copilot.status') && updateStatus(status)
+    event.affectsConfiguration('GithubCopilot.status.show') && updateStatus(status)
   }))
   subscriptions.push(vscode.workspace.onDidOpenTextDocument(async function (document) {
     if (status === STATUS.enable) {
@@ -309,7 +309,9 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
       // fix position
       position = editor.selection.start
       const items: vscode.InlineCompletionItem[] = []
-      if (status === STATUS.disable) {
+      const config = vscode.workspace.getConfiguration()
+      const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+      if (status === STATUS.disable || !enableAutoCompletions) {
         return { items }
       }
       updateStatus(true)
