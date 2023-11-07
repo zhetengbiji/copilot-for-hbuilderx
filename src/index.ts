@@ -320,9 +320,9 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
               line: position.line,
               character: position.character
             },
-            indentSize: 4,
-            insertSpaces: true,
-            tabSize: 4,
+            // indentSize: 4,
+            // insertSpaces: true,
+            // tabSize: 4,
             version: 0,
             languageId,
             uri: fileName,
