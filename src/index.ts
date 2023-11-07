@@ -133,7 +133,9 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
       statusOrLoading = STATUS.loading
     }
   }
-  const fixString = isWin ? 'Copilot' : ''
+  const config = vscode.workspace.getConfiguration()
+  const statusConfig = config.get('copilot.status')
+  const fixString = (statusConfig === 'icon+text' || (statusConfig !== 'icon' && isWin)) ? 'Copilot' : ''
   switch (statusOrLoading) {
     case STATUS.loading:
       statusBarItem.text = (hbx ? '$(copilot-loading~spin)' : '$(loading~spin)') + fixString
@@ -225,6 +227,9 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
   subscriptions.push(statusBarItem)
   statusBarItem.show()
   checkStatus()
+  subscriptions.push(vscode.workspace.onDidChangeConfiguration(async function (event) {
+    event.affectsConfiguration('copilot.status') && updateStatus(status)
+  }))
   subscriptions.push(vscode.workspace.onDidOpenTextDocument(async function (document) {
     if (status === STATUS.enable) {
       await initWorkspace()

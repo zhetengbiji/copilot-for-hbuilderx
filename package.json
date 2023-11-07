@@ -24,6 +24,26 @@
     "*"
   ],
   "contributes": {
+    "configuration": {
+      "title": "GitHub Copilot",
+      "properties": {
+        "copilot.status": {
+          "type": "string",
+          "default": "auto",
+          "description": "状态显示",
+          "enum": [
+            "auto",
+            "icon",
+            "icon+text"
+          ],
+          "enumDescriptions": [
+            "自动",
+            "仅图标",
+            "图标+文本"
+          ]
+        }
+      }
+    },
     "commands": [
       {
         "command": "copilot.status",
