@@ -39,13 +39,6 @@
           "fontCharacter": "\\E60F"
         }
       },
-      "loading": {
-        "description": "copilot loading",
-        "default": {
-          "fontPath": "iconfont.ttf",
-          "fontCharacter": "\\E627"
-        }
-      },
       "copilot-loading": {
         "description": "copilot loading",
         "default": {
