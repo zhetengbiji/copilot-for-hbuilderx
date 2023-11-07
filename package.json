@@ -3,7 +3,7 @@
   "name": "copilot-for-hbuilderx",
   "description": "Your AI pair programmer",
   "displayName": "GitHub Copilot",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "publisher": "zhetengbiji",
   "engines": {
     "HBuilderX": "^3.8.5",
