@@ -13,7 +13,7 @@ fs.writeFileSync(path.join(__dirname, '../package/package.json'), JSON.stringify
   scripts: undefined,
   dependencies: undefined,
   devDependencies: undefined
-}), null, 2))
+}), null, 2).replace(/iconfont\.woff/g, 'iconfont.ttf'))
 
 execSync(`cd ${__dirname}/../package && zip -r ../${packageJson.name}-${packageJson.version}.zip ./*`)
 

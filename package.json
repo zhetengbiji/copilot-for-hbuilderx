@@ -42,7 +42,7 @@
       "copilot-loading": {
         "description": "copilot loading",
         "default": {
-          "fontPath": "iconfont.ttf",
+          "fontPath": "iconfont.woff",
           "fontCharacter": "\\E627"
         }
       },

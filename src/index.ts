@@ -10,6 +10,7 @@ try {
   console.warn('hbuilderx not found')
 }
 
+const isWin = process.platform === 'win32'
 let statusBarItem: vscode.StatusBarItem
 
 const child = fork(path.join(__dirname, '../dist/agent.js'), [
@@ -132,21 +133,23 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
       statusOrLoading = STATUS.loading
     }
   }
+  const fixString = isWin ? 'Copilot' : ''
   switch (statusOrLoading) {
     case STATUS.loading:
-      statusBarItem.text = hbx ? '$(copilot-loading~spin)' : '$(loading~spin)'
+      statusBarItem.text = (hbx ? '$(copilot-loading~spin)' : '$(loading~spin)') + fixString
       statusBarItem.tooltip = 'GitHub Copilot 加载中...'
       break
     case STATUS.warning:
-      statusBarItem.text = '$(copilot-warning)'
+      statusBarItem.text = '$(copilot-warning)' + fixString
       statusBarItem.tooltip = 'GitHub Copilot 加载出错'
       break
     case STATUS.disable:
-      statusBarItem.text = '$(copilot-disable)'
+      // Windows 拼接 Copilot 字符串
+      statusBarItem.text = '$(copilot-disable)' + fixString
       statusBarItem.tooltip = 'GitHub Copilot 未启用'
       break
     case STATUS.enable:
-      statusBarItem.text = '$(copilot-enable)'
+      statusBarItem.text = '$(copilot-enable)' + fixString
       statusBarItem.tooltip = 'GitHub Copilot 已启用'
       break
   }
