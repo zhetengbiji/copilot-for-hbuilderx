@@ -216,7 +216,7 @@ async function statusClick() {
   }
 }
 
-function activate({ subscriptions }: vscode.ExtensionContext) {
+async function activate({ subscriptions }: vscode.ExtensionContext) {
   const statusCommandId = 'copilot.status'
   subscriptions.push(vscode.commands.registerCommand('copilot.status', () => {
     statusClick()
@@ -226,11 +226,10 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
   updateStatus(status)
   subscriptions.push(statusBarItem)
   statusBarItem.show()
-  checkStatus()
   subscriptions.push(vscode.workspace.onDidChangeConfiguration(async function (event) {
     event.affectsConfiguration('GithubCopilot.status.show') && updateStatus(status)
   }))
-  subscriptions.push(vscode.workspace.onDidOpenTextDocument(async function (document) {
+  async function onDidOpenTextDocument(document: vscode.TextDocument) {
     if (status === STATUS.enable) {
       await initWorkspace()
       const uri = document.uri.toString()
@@ -245,7 +244,8 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
         }
       })
     }
-  }))
+  }
+  subscriptions.push(vscode.workspace.onDidOpenTextDocument(onDidOpenTextDocument))
   subscriptions.push(vscode.workspace.onDidChangeTextDocument(async function ({ document }) {
     if (status === STATUS.enable) {
       await initWorkspace()
@@ -400,6 +400,10 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
       return { items }
     }
   }))
+  await checkStatus()
+  vscode.window.visibleTextEditors.forEach(editor => {
+    onDidOpenTextDocument(editor.document)
+  })
 }
 
 function deactivate() { }
