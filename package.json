@@ -35,7 +35,7 @@
       "copilot-enable": {
         "description": "copilot enable",
         "default": {
-          "fontPath": "iconfont.ttf",
+          "fontPath": "iconfont.woff",
           "fontCharacter": "\\E60F"
         }
       },
@@ -49,14 +49,14 @@
       "copilot-warning": {
         "description": "copilot warning",
         "default": {
-          "fontPath": "iconfont.ttf",
+          "fontPath": "iconfont.woff",
           "fontCharacter": "\\E62C"
         }
       },
       "copilot-disable": {
         "description": "copilot disable",
         "default": {
-          "fontPath": "iconfont.ttf",
+          "fontPath": "iconfont.woff",
           "fontCharacter": "\\E62B"
         }
       }
