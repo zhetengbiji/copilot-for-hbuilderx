@@ -287,7 +287,13 @@ function activate({ subscriptions }: vscode.ExtensionContext) {
     'less',
     'vue',
     'nvue',
-    'uvue'
+    'uvue',
+    'markdown',
+    'html',
+    'json',
+    'jsona',
+    'jsonl',
+    'jsonc'
   ]
   subscriptions.push(vscode.languages.registerInlineCompletionItemProvider(selector, {
     async provideInlineCompletionItems(document, position, token, context) {
