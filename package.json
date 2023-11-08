@@ -7,10 +7,38 @@
   "publisher": "zhetengbiji",
   "engines": {
     "HBuilderX": "^3.8.5",
-    "vscode": "^1.74.0"
+    "vscode": "^1.75.0",
+    "node": ">=16.14.0",
+    "npm": ">=8.0.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Machine Learning",
+    "Education",
+    "Snippets"
+  ],
+  "keywords": [
+    "ai",
+    "openai",
+    "codex",
+    "pilot",
+    "snippets",
+    "documentation",
+    "autocomplete",
+    "intellisense",
+    "refactor",
+    "javascript",
+    "python",
+    "typescript",
+    "php",
+    "go",
+    "golang",
+    "ruby",
+    "c++",
+    "c#",
+    "java",
+    "kotlin",
+    "co-pilot"
   ],
   "scripts": {
     "vscode:prepublish": "npm run build",
