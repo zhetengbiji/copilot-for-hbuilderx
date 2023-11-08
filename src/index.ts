@@ -216,6 +216,192 @@ async function statusClick() {
   }
 }
 
+let inlineCompletionItemProviderDisposable: vscode.Disposable | null = null
+function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionContext["subscriptions"]) {
+  if (inlineCompletionItemProviderDisposable) {
+    inlineCompletionItemProviderDisposable.dispose()
+    const index = subscriptions.indexOf(inlineCompletionItemProviderDisposable)
+    if (index !== -1) {
+      subscriptions.splice(index, 1)
+    }
+  }
+  const config = vscode.workspace.getConfiguration()
+  const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+  if (!enableAutoCompletions) {
+    return
+  }
+  const ALL_SELECTOR = [
+    'abap',
+    'bat',
+    'bibtex',
+    'clojure',
+    'coffeescript',
+    'c',
+    'cpp',
+    'csharp',
+    'dockercompose',
+    'css',
+    'cuda-cpp',
+    'diff',
+    'dockerfile',
+    'fsharp',
+    'git-commit',
+    'git-rebase',
+    'go',
+    'groovy',
+    'handlebars',
+    'haml',
+    'html',
+    'ini',
+    'java',
+    'javascript',
+    'javascriptreact',
+    'json',
+    'jsonc',
+    'latex',
+    'less',
+    'lua',
+    'makefile',
+    'markdown',
+    'objective-c',
+    'objective-cpp',
+    'perl ',
+    'perl6',
+    'php',
+    'plaintext',
+    'powershell',
+    'jade',
+    'pug',
+    'python',
+    'r',
+    'razor',
+    'ruby',
+    'rust',
+    'scss',
+    'sass',
+    'shaderlab',
+    'shellscript',
+    'slim',
+    'sql',
+    'stylus',
+    'swift',
+    'typescript',
+    'typescriptreact',
+    'tex',
+    'vb',
+    'vue',
+    'vue-html',
+    'xml',
+    'xsl',
+    'yaml',
+  ].concat([
+    'uts',
+    'nvue',
+    'uvue',
+    'jsona',
+    'jsonl',
+    'dart',
+    'kotlin',
+    'scala',
+    'shell',
+    'perl',
+    'elixir',
+    'erlang',
+    'haskell',
+    'ocaml',
+    'purescript',
+    'reason',
+    'scheme'
+  ])
+  const selector: string[] = []
+  const enableSelector = config.get<string>('GithubCopilot.enable') || ''
+  enableSelector.split(',').forEach((item) => {
+    let [key, val] = item.split('=')
+    key = key.trim()
+    val = val.trim()
+    if (!key || !val) {
+      return
+    }
+    const keys = key === 'all' || key === '*' ? ALL_SELECTOR : [key]
+    if (val === 'true') {
+      keys.forEach((key) => {
+        selector.push(key)
+      })
+    } else if (val === 'false') {
+      keys.forEach((key) => {
+        const index = selector.indexOf(key)
+        if (index !== -1) {
+          selector.splice(index, 1)
+        }
+      })
+    }
+  })
+  inlineCompletionItemProviderDisposable = vscode.languages.registerInlineCompletionItemProvider(selector, {
+    async provideInlineCompletionItems(document, position, token, context) {
+      const editor = vscode.window.activeTextEditor!
+      // fix position
+      position = editor.selection.start
+      const items: vscode.InlineCompletionItem[] = []
+      if (status === STATUS.disable) {
+        return { items }
+      }
+      updateStatus(true)
+      try {
+        const editor = vscode.window.activeTextEditor!
+        const workspaceFolder = await initWorkspace()
+        // await client.request('getVersion', {})
+        const uri = document.uri.toString()
+        const fileName = document.fileName
+        const text = document.getText()
+        const languageId = document.languageId
+        const res = await client.request('getCompletionsCycling', {
+          doc: {
+            source: text,
+            position: {
+              line: position.line,
+              character: position.character
+            },
+            // indentSize: 4,
+            // insertSpaces: true,
+            // tabSize: 4,
+            version: 0,
+            languageId,
+            uri: fileName,
+            path: fileName,
+            relativePath: path.relative(workspaceFolder, fileName)
+          }
+        })
+        console.log('res: ', res)
+        const completions = res.completions
+        for (let index = 0; index < completions.length; index++) {
+          const completion = completions[index]
+          // await client.request('notifyAccepted', {
+          //   uuid: completion.uuid
+          // })
+          console.log('completion: ', completion)
+          const position = completion.position
+          const positionLeft = position.character
+          const range = completion.range
+          const start = range.start
+          const end = range.end
+          const completionText = completion.text.trimEnd()
+          let codeRange = new vscode.Range(new vscode.Position(start.line, positionLeft), new vscode.Position(end.line, end.character))
+          items.push({
+            insertText: completionText.substring(positionLeft),
+            range: codeRange
+          })
+        }
+      } catch (error) {
+        console.error(error)
+      }
+      updateStatus(false)
+      console.log('items: ', items.length)
+      return { items }
+    }
+  })
+  subscriptions.push(inlineCompletionItemProviderDisposable)
+}
+
 async function activate({ subscriptions }: vscode.ExtensionContext) {
   const statusCommandId = 'copilot.status'
   subscriptions.push(vscode.commands.registerCommand('copilot.status', () => {
@@ -226,9 +412,6 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   updateStatus(status)
   subscriptions.push(statusBarItem)
   statusBarItem.show()
-  subscriptions.push(vscode.workspace.onDidChangeConfiguration(async function (event) {
-    event.affectsConfiguration('GithubCopilot.status.show') && updateStatus(status)
-  }))
   async function onDidOpenTextDocument(document: vscode.TextDocument) {
     if (status === STATUS.enable) {
       await initWorkspace()
@@ -285,119 +468,13 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
       })
     }
   }))
-  const selector = [
-    'javascript',
-    'typescript',
-    'uts',
-    'css',
-    'scss',
-    'sass',
-    'less',
-    'vue',
-    'nvue',
-    'uvue',
-    'markdown',
-    'html',
-    'json',
-    'jsona',
-    'jsonl',
-    'jsonc',
-    'swift',
-    'python',
-    'java',
-    'php',
-    'go',
-    'ruby',
-    'rust',
-    'c',
-    'cpp',
-    'csharp',
-    'dart',
-    'kotlin',
-    'scala',
-    'r',
-    'sql',
-    'shell',
-    'powershell',
-    'perl',
-    'lua',
-    'clojure',
-    'elixir',
-    'erlang',
-    'fsharp',
-    'haskell',
-    'ocaml',
-    'purescript',
-    'reason',
-    'scheme',
-    'vb',
-    'yaml',
-    'xml',
-    'plaintext'
-  ]
-  subscriptions.push(vscode.languages.registerInlineCompletionItemProvider(selector, {
-    async provideInlineCompletionItems(document, position, token, context) {
-      const editor = vscode.window.activeTextEditor!
-      // fix position
-      position = editor.selection.start
-      const items: vscode.InlineCompletionItem[] = []
-      const config = vscode.workspace.getConfiguration()
-      const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
-      if (status === STATUS.disable || !enableAutoCompletions) {
-        return { items }
-      }
-      updateStatus(true)
-      try {
-        const editor = vscode.window.activeTextEditor!
-        const workspaceFolder = await initWorkspace()
-        // await client.request('getVersion', {})
-        const uri = document.uri.toString()
-        const fileName = document.fileName
-        const text = document.getText()
-        const languageId = document.languageId
-        const res = await client.request('getCompletionsCycling', {
-          doc: {
-            source: text,
-            position: {
-              line: position.line,
-              character: position.character
-            },
-            // indentSize: 4,
-            // insertSpaces: true,
-            // tabSize: 4,
-            version: 0,
-            languageId,
-            uri: fileName,
-            path: fileName,
-            relativePath: path.relative(workspaceFolder, fileName)
-          }
-        })
-        console.log('res: ', res)
-        const completions = res.completions
-        for (let index = 0; index < completions.length; index++) {
-          const completion = completions[index]
-          // await client.request('notifyAccepted', {
-          //   uuid: completion.uuid
-          // })
-          console.log('completion: ', completion)
-          const position = completion.position
-          const positionLeft = position.character
-          const range = completion.range
-          const start = range.start
-          const end = range.end
-          const completionText = completion.text.trimEnd()
-          let codeRange = new vscode.Range(new vscode.Position(start.line, positionLeft), new vscode.Position(end.line, end.character))
-          items.push({
-            insertText: completionText.substring(positionLeft),
-            range: codeRange
-          })
-        }
-      } catch (error) {
-        console.error(error)
-      }
-      updateStatus(false)
-      console.log('items: ', items.length)
-      return { items }
+  registerInlineCompletionItemProvider(subscriptions)
+  subscriptions.push(vscode.workspace.onDidChangeConfiguration(function (event) {
+    if (event.affectsConfiguration('GithubCopilot.status.show')) {
+      updateStatus(status)
+    }
+    if (event.affectsConfiguration('GithubCopilot.enable') || event.affectsConfiguration('GithubCopilot.editor.enableAutoCompletions')) {
+      registerInlineCompletionItemProvider(subscriptions)
     }
   }))
   await checkStatus()

@@ -76,15 +76,10 @@
           "description": "启用自动补全"
         },
         "GithubCopilot.enable": {
-          "type": "object",
-          "default": {
-            "*": true,
-            "plaintext": false,
-            "markdown": false,
-            "scminput": false
-          },
-          "additionalProperties": "boolean",
-          "markdownDescription": "Enable or disable Copilot completions for specified [languages](https://code.visualstudio.com/docs/languages/identifiers)"
+          "type": "string",
+          "default": "*=true,plaintext=false,markdown=false,scminput=false",
+          "description": "启用或禁用指定语言的自动补全",
+          "markdownDescription": "启用或禁用指定[语言](https://code.visualstudio.com/docs/languages/identifiers)的自动补全"
         }
       }
     },
