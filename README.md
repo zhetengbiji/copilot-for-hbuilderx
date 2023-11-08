@@ -20,8 +20,8 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 
 点击左下角 GitHub Copilot 图标进行登录，登录后在编辑代码时 GitHub Copilot 会自动给出建议。
 
-- 接受建议： Tab
-- 拒绝建议： Esc
+- 接受建议： Tab 键
+- 拒绝建议： Esc 键
 
 ## 注意事项
 
