@@ -68,6 +68,57 @@ const workspaces: Record<string, {}> = {}
 //   return index
 // }
 
+function getNetworkProxy() {
+  const config = vscode.workspace.getConfiguration()
+  const enable = config.get<boolean>('GithubCopilot.proxy.enable')
+  const networkProxy: {
+    host?: string,
+    port?: number,
+    username?: string,
+    password?: string,
+    rejectUnauthorized?: boolean,
+  } = {}
+  if (enable) {
+    const host = config.get<string>('GithubCopilot.proxy.host') || ''
+    const [hostname, port] = host.split(':')
+    if (hostname && port) {
+      networkProxy.host = hostname
+      networkProxy.port = Number(port)
+      const user = config.get<string>('GithubCopilot.proxy.user') || ''
+      const [username, password] = user.split(':')
+      if (username && password) {
+        networkProxy.username = username
+        networkProxy.password = password
+      }
+      const strictSSL = config.get<boolean>('GithubCopilot.proxy.strictSSL')
+      networkProxy.rejectUnauthorized = !!strictSSL
+      return { networkProxy }
+    }
+  }
+  return {}
+}
+
+async function setEditorInfo() {
+  return await client.request('setEditorInfo', Object.assign({
+    editorInfo: {
+      name: 'HBuilderX',
+      version: vscode.version
+    },
+    editorPluginInfo: {
+      name: 'GitHub Copilot for HBuilderX',
+      version: '0.3.1'
+    }
+  }, getNetworkProxy()))
+}
+
+let isEditorInfoChanged = false
+async function checkEditorInfo() {
+  if (isEditorInfoChanged) {
+    await setEditorInfo()
+    isEditorInfoChanged = false
+  }
+}
+
 async function initWorkspace() {
   let workspaceFolder = '/'
   try {
@@ -92,16 +143,10 @@ async function initWorkspace() {
         name: 'GitHub Copilot for HBuilderX'
       }
     })
-    await client.request('setEditorInfo', {
-      editorInfo: {
-        name: 'HBuilderX',
-        version: ''
-      },
-      editorPluginInfo: {
-        name: 'GitHub Copilot for HBuilderX',
-        version: ''
-      }
-    })
+    const res = await setEditorInfo()
+    console.log('res: ', res)
+    const version = await client.request('getVersion', {})
+    console.log('version: ', version)
     item = {}
     workspaces[workspaceFolder] = item
   }
@@ -110,8 +155,11 @@ async function initWorkspace() {
 
 async function signout() {
   client.rejectAllPendingRequests('cancel')
+  updateStatus(true)
+  await checkEditorInfo()
   await client.request('signOut', {})
   updateStatus(STATUS.disable)
+  updateStatus(false)
   vscode.window.showInformationMessage('已退出')
 }
 
@@ -161,10 +209,11 @@ async function checkStatus() {
   updateStatus(true)
   await initWorkspace()
   if (status === STATUS.disable) {
-    updateStatus(true)
+    await checkEditorInfo()
     const res = await client.request('checkStatus', {
       // options: { localChecksOnly: true }
     })
+    console.log('res: ', res)
     // {"status":"NotSignedIn"}
     // {"status":"OK","user":"zhetengbiji"}
     if (res.status === 'OK') {
@@ -179,6 +228,7 @@ async function signin() {
     updateStatus(true)
     client.rejectAllPendingRequests('cancel')
     try {
+      await checkEditorInfo()
       const res = await client.request('checkStatus', {
         // options: { localChecksOnly: true }
       })
@@ -347,9 +397,9 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
       }
       updateStatus(true)
       try {
+        await checkEditorInfo()
         const editor = vscode.window.activeTextEditor!
         const workspaceFolder = await initWorkspace()
-        // await client.request('getVersion', {})
         const uri = document.uri.toString()
         const fileName = document.fileName
         const text = document.getText()
@@ -475,6 +525,9 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
     }
     if (event.affectsConfiguration('GithubCopilot.enable') || event.affectsConfiguration('GithubCopilot.editor.enableAutoCompletions')) {
       registerInlineCompletionItemProvider(subscriptions)
+    }
+    if (event.affectsConfiguration('GithubCopilot.proxy.enable') || event.affectsConfiguration('GithubCopilot.proxy.host') || event.affectsConfiguration('GithubCopilot.proxy.user') || event.affectsConfiguration('GithubCopilot.proxy.strictSSL')) {
+      isEditorInfoChanged = true
     }
   }))
   await checkStatus()
