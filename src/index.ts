@@ -106,7 +106,7 @@ async function setEditorInfo() {
     },
     editorPluginInfo: {
       name: 'GitHub Copilot for HBuilderX',
-      version: '0.3.1'
+      version: '0.3.2'
     }
   }, getNetworkProxy()))
 }
