@@ -239,10 +239,15 @@ async function signin() {
 
         })
         // {"status":"PromptUserDeviceFlow","userCode":"XXXX-XXXX","verificationUri":"https://github.com/login/device","expiresIn":899,"interval":5}
-        vscode.window.showInformationMessage(`请在浏览器中打开 ${res.verificationUri} 并输入 ${res.userCode} 进行登录`)
+        const message = `在浏览器中打开 ${res.verificationUri} 进行登录`
+        await (hbx ? hbx.window.showInformationMessage(message, ['好的']) : vscode.window.showInformationMessage(message, '好的'))
+        await vscode.env.openExternal(vscode.Uri.parse(res.verificationUri))
+        await vscode.env.clipboard.writeText(res.userCode)
+        vscode.window.showInformationMessage(`验证码 ${res.userCode} 已复制到剪贴板`)
         await client.request('signInConfirm', {
           userCode: res.userCode
         })
+        vscode.window.showInformationMessage('登录成功')
         updateStatus(STATUS.enable)
       } else {
         updateStatus(STATUS.enable)
