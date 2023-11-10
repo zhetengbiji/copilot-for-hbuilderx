@@ -18,11 +18,11 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 
 ## 使用方式
 
-点击左下角 GitHub Copilot 图标进行登录，登录后在编辑代码时 GitHub Copilot 会自动给出建议。
+点击右下角 GitHub Copilot 图标进行登录，登录后在编辑代码时 GitHub Copilot 会自动给出建议。
 
 - 接受建议： Tab 键
 - 拒绝建议： Esc 键
 
 ## 注意事项
 
-- 暂未支持代理配置，部分地区访问 GitHub Copilot 时可能比较慢。
+- 部分地区访问 GitHub Copilot 较慢，可以尝试在编辑器设置中配置 GitHub Copilot 插件代理。
