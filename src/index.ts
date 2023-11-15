@@ -10,6 +10,12 @@ try {
   console.warn('hbuilderx not found')
 }
 
+if (hbx) {
+  vscode.window.showInformationMessage = function <T extends string>(message: string, ...items: T[]): Thenable<T | undefined> {
+    return hbx.window.showInformationMessage(message, items)
+  }
+}
+
 const isWin = process.platform === 'win32'
 let statusBarItem: vscode.StatusBarItem
 
@@ -240,7 +246,7 @@ async function signin() {
         })
         // {"status":"PromptUserDeviceFlow","userCode":"XXXX-XXXX","verificationUri":"https://github.com/login/device","expiresIn":899,"interval":5}
         const message = `在浏览器中打开 ${res.verificationUri} 进行登录`
-        await (hbx ? hbx.window.showInformationMessage(message, ['好的']) : vscode.window.showInformationMessage(message, '好的'))
+        await vscode.window.showInformationMessage(message, '好的')
         await vscode.env.openExternal(vscode.Uri.parse(res.verificationUri))
         await vscode.env.clipboard.writeText(res.userCode)
         vscode.window.showInformationMessage(`验证码 ${res.userCode} 已复制到剪贴板`)
@@ -265,7 +271,7 @@ async function signin() {
 
 async function statusClick() {
   const message = `是否${status === STATUS.enable ? '退出' : '登录'} Copilot？`
-  const res = await (hbx ? hbx.window.showInformationMessage(message, ['是', '否']) : vscode.window.showInformationMessage(message, '是', '否'))
+  const res = await vscode.window.showInformationMessage(message, '是', '否')
   if (res === '是') {
     status === STATUS.enable ? signout() : signin()
   }
