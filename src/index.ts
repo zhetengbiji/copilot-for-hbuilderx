@@ -18,6 +18,7 @@ if (hbx) {
 
 const isWin = process.platform === 'win32'
 let statusBarItem: vscode.StatusBarItem
+let enableAutoCompletions = true
 
 const child = fork(path.join(__dirname, '../dist/agent.js'), [
   // '--node-ipc', '--stdio' or '--socket={number}'
@@ -269,8 +270,35 @@ async function signin() {
   }
 }
 
-async function statusClick() {
-  const message = `是否${status === STATUS.enable ? '退出' : '登录'} Copilot？`
+async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions"]) {
+  if (status === STATUS.enable) {
+    const config = vscode.workspace.getConfiguration()
+    const configEnableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+    const signout = `退出 GitHub Copilot？`
+    const toggle = `${enableAutoCompletions ? '禁用' : '启用'}自动补全`
+    const items = [`GitHub Copilot 状态: ${configEnableAutoCompletions && enableAutoCompletions ? '正常' : '已禁用'}`]
+    if (configEnableAutoCompletions) {
+      items.push(toggle)
+    }
+    const settings = '打开设置'
+    items.push(settings)
+    items.push(signout)
+    const res = await vscode.window.showQuickPick(items)
+    if (res !== signout) {
+      if (res === toggle) {
+        enableAutoCompletions = !enableAutoCompletions
+        registerInlineCompletionItemProvider(subscriptions)
+      } else if (res === settings) {
+        if (hbx) {
+          hbx.workspace.gotoConfiguration("GithubCopilot.editor.enableAutoCompletions")
+        } else {
+          vscode.commands.executeCommand('workbench.action.openSettings', 'GithubCopilot')
+        }
+      }
+      return
+    }
+  }
+  const message = `是否${status === STATUS.enable ? '退出' : '登录'} GitHub Copilot？`
   const res = await vscode.window.showInformationMessage(message, '是', '否')
   if (res === '是') {
     status === STATUS.enable ? signout() : signin()
@@ -287,8 +315,7 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
     }
   }
   const config = vscode.workspace.getConfiguration()
-  const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
-  if (!enableAutoCompletions) {
+  if (!(enableAutoCompletions && config.get('GithubCopilot.editor.enableAutoCompletions'))) {
     return
   }
   const ALL_SELECTOR = [
@@ -466,7 +493,7 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
 async function activate({ subscriptions }: vscode.ExtensionContext) {
   const statusCommandId = 'copilot.status'
   subscriptions.push(vscode.commands.registerCommand('copilot.status', () => {
-    statusClick()
+    statusClick(subscriptions)
   }))
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
   statusBarItem.command = statusCommandId
