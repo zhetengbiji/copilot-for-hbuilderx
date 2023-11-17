@@ -87,12 +87,12 @@ function getNetworkProxy() {
   } = {}
   if (enable) {
     const host = config.get<string>('GithubCopilot.proxy.host') || ''
-    const [hostname, port] = host.split(':')
+    const [_, hostname, port] = host.match(/(?:socks[45]?|https?)?[:：]?\/*([a-z0-9-_.]+)[:：](\d+)/i) || []
     if (hostname && port) {
       networkProxy.host = hostname
       networkProxy.port = Number(port)
       const user = config.get<string>('GithubCopilot.proxy.user') || ''
-      const [username, password] = user.split(':')
+      const [username, password] = user.split(/[:：]/)
       if (username && password) {
         networkProxy.username = username
         networkProxy.password = password
