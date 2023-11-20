@@ -73,7 +73,7 @@
         "GithubCopilot.editor.enableAutoCompletions": {
           "type": "boolean",
           "default": true,
-          "description": "启用自动补全"
+          "description": "自动显示行内补全"
         },
         "GithubCopilot.enable": {
           "type": "string",

@@ -18,7 +18,6 @@ if (hbx) {
 
 const isWin = process.platform === 'win32'
 let statusBarItem: vscode.StatusBarItem
-let enableAutoCompletions = true
 
 const child = fork(path.join(__dirname, '../dist/agent.js'), [
   // '--node-ipc', '--stdio' or '--socket={number}'
@@ -273,21 +272,19 @@ async function signin() {
 async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions"]) {
   if (status === STATUS.enable) {
     const config = vscode.workspace.getConfiguration()
-    const configEnableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+    const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
     const signout = `退出 GitHub Copilot？`
     const toggle = `${enableAutoCompletions ? '禁用' : '启用'}自动补全`
-    const items = [`GitHub Copilot 状态: ${configEnableAutoCompletions && enableAutoCompletions ? '正常' : '已禁用'}`]
-    if (configEnableAutoCompletions) {
-      items.push(toggle)
-    }
+    const items = [`GitHub Copilot 状态: ${enableAutoCompletions ? '正常' : '已禁用'}`]
+    items.push(toggle)
     const settings = '打开设置'
     items.push(settings)
     items.push(signout)
     const res = await vscode.window.showQuickPick(items)
     if (res !== signout) {
       if (res === toggle) {
-        enableAutoCompletions = !enableAutoCompletions
-        registerInlineCompletionItemProvider(subscriptions)
+        config.update('GithubCopilot.editor.enableAutoCompletions', !enableAutoCompletions)
+        // registerInlineCompletionItemProvider(subscriptions)
       } else if (res === settings) {
         if (hbx) {
           hbx.workspace.gotoConfiguration("GithubCopilot.editor.enableAutoCompletions")
@@ -315,7 +312,7 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
     }
   }
   const config = vscode.workspace.getConfiguration()
-  if (!(enableAutoCompletions && config.get('GithubCopilot.editor.enableAutoCompletions'))) {
+  if (!config.get('GithubCopilot.editor.enableAutoCompletions')) {
     return
   }
   const ALL_SELECTOR = [
@@ -400,6 +397,45 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
     'purescript',
     'reason',
     'scheme'
+  ]).concat([
+    'txt',
+    'actionscript',
+    'ada',
+    'asm',
+    'asp',
+    'autoit',
+    'baanc',
+    'bash',
+    'batch',
+    'cs',
+    'cmake',
+    'caml',
+    'cobol',
+    'd',
+    'ejs',
+    'fortran',
+    'fortran77',
+    'html_es6',
+    'inno',
+    'json_tm',
+    'javascript_es6',
+    'kix',
+    'lisp',
+    'matlab',
+    'njs',
+    'nml',
+    'nsis',
+    'nss',
+    'objc',
+    'pascal',
+    'postscript',
+    'rc',
+    'smalltalk',
+    'tcl',
+    'ux',
+    'vhdl',
+    'verilog',
+    'wxml'
   ])
   const selector: string[] = []
   const enableSelector = config.get<string>('GithubCopilot.enable') || ''
