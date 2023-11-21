@@ -301,7 +301,10 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
         }
         const selectorString = selectorArray.join(',')
         config.update('GithubCopilot.enable', selectorString)
-        // registerInlineCompletionItemProvider(subscriptions)
+        // HBuilderX 不会触发 change 事件
+        if (hbx) {
+          registerInlineCompletionItemProvider(subscriptions)
+        }
       } else if (res === settings) {
         if (hbx) {
           hbx.workspace.gotoConfiguration('GithubCopilot.editor.enableAutoCompletions')
@@ -322,6 +325,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
 const selectorCache: Map<string, boolean> = new Map()
 let inlineCompletionItemProviderDisposable: vscode.Disposable | null = null
 function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionContext["subscriptions"]) {
+  selectorCache.clear()
   if (inlineCompletionItemProviderDisposable) {
     inlineCompletionItemProviderDisposable.dispose()
     const index = subscriptions.indexOf(inlineCompletionItemProviderDisposable)
@@ -475,8 +479,8 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
         const index = selector.indexOf(item)
         if (index !== -1) {
           selector.splice(index, 1)
-          selectorCache.set(key, false)
         }
+        selectorCache.set(key, false)
       })
     }
   })
