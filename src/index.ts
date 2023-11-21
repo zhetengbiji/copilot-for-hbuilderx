@@ -202,11 +202,11 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
     case STATUS.disable:
       // Windows 拼接 Copilot 字符串
       statusBarItem.text = '$(copilot-disable)' + fixString
-      statusBarItem.tooltip = 'GitHub Copilot 未启用'
+      statusBarItem.tooltip = 'GitHub Copilot 未登录'
       break
     case STATUS.enable:
       statusBarItem.text = '$(copilot-enable)' + fixString
-      statusBarItem.tooltip = 'GitHub Copilot 已启用'
+      statusBarItem.tooltip = 'GitHub Copilot 已登录'
       break
   }
 }
@@ -272,21 +272,32 @@ async function signin() {
 async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions"]) {
   if (status === STATUS.enable) {
     const config = vscode.workspace.getConfiguration()
-    const enableAutoCompletions = selectorCache.get('*')
-    const signout = `退出 GitHub Copilot？`
+    const enableAutoCompletions = !!selectorCache.get('*')
+    const editor = vscode.window.activeTextEditor
+    const languageId = editor?.document.languageId
+    const languageEnableAutoCompletions = languageId ? (selectorCache.get(languageId!) ?? enableAutoCompletions) : enableAutoCompletions
+    const items = [`GitHub Copilot 状态: ${languageEnableAutoCompletions ? '正常' : '已禁用'}`]
     const toggle = `${enableAutoCompletions ? '禁用' : '启用'}自动补全`
-    const items = [`GitHub Copilot 状态: ${enableAutoCompletions ? '正常' : '已禁用'}`]
     items.push(toggle)
+    const toggleLanguage = `${languageEnableAutoCompletions ? '禁用' : '启用'} ${languageId} 的自动补全`
+    if (languageId) {
+      items.push(toggleLanguage)
+    }
     const settings = '打开设置'
     items.push(settings)
+    const signout = `退出 GitHub Copilot`
     items.push(signout)
     const res = await vscode.window.showQuickPick(items)
     if (res !== signout) {
-      if (res === toggle) {
-        selectorCache.set('*', !!enableAutoCompletions)
+      if (res === toggle || res === toggleLanguage) {
+        if (res === toggleLanguage) {
+          selectorCache.set(languageId!, !languageEnableAutoCompletions)
+        } else {
+          selectorCache.set('*', !enableAutoCompletions)
+        }
         const selectorArray: Array<string> = []
-        for (const key in selectorCache) {
-          selectorArray.push(`${key}=${selectorCache.get(key)}`)
+        for (const [key, val] of selectorCache) {
+          selectorArray.push(`${key}=${val}`)
         }
         const selectorString = selectorArray.join(',')
         config.update('GithubCopilot.enable', selectorString)
@@ -445,8 +456,8 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
   const enableSelector = config.get<string>('GithubCopilot.enable') || ''
   enableSelector.split(',').forEach((item) => {
     let [key, val] = item.split('=')
-    key = key.trim()
-    val = val.trim()
+    key = key && key.trim()
+    val = val && val.trim()
     if (!key || !val) {
       return
     }
@@ -469,72 +480,74 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
       })
     }
   })
-  inlineCompletionItemProviderDisposable = vscode.languages.registerInlineCompletionItemProvider(selector, {
-    async provideInlineCompletionItems(document, position, token, context) {
-      const editor = vscode.window.activeTextEditor!
-      // fix position
-      position = editor.selection.start
-      const items: vscode.InlineCompletionItem[] = []
-      const config = vscode.workspace.getConfiguration()
-      const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
-      if (status === STATUS.disable && enableAutoCompletions) {
+  if (selector.length) {
+    inlineCompletionItemProviderDisposable = vscode.languages.registerInlineCompletionItemProvider(selector, {
+      async provideInlineCompletionItems(document, position, token, context) {
+        const editor = vscode.window.activeTextEditor!
+        // fix position
+        position = editor.selection.start
+        const items: vscode.InlineCompletionItem[] = []
+        const config = vscode.workspace.getConfiguration()
+        const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+        if (status === STATUS.disable && enableAutoCompletions) {
+          return { items }
+        }
+        updateStatus(true)
+        try {
+          await checkEditorInfo()
+          const editor = vscode.window.activeTextEditor!
+          const workspaceFolder = await initWorkspace()
+          const uri = document.uri.toString()
+          const fileName = document.fileName
+          const text = document.getText()
+          const languageId = document.languageId
+          const res = await client.request('getCompletionsCycling', {
+            doc: {
+              source: text,
+              position: {
+                line: position.line,
+                character: position.character
+              },
+              // indentSize: 4,
+              // insertSpaces: true,
+              // tabSize: 4,
+              version: 0,
+              languageId,
+              uri: fileName,
+              path: fileName,
+              relativePath: path.relative(workspaceFolder, fileName)
+            }
+          })
+          console.log('res: ', res)
+          const completions = res.completions
+          for (let index = 0; index < completions.length; index++) {
+            const completion = completions[index]
+            // await client.request('notifyAccepted', {
+            //   uuid: completion.uuid
+            // })
+            console.log('completion: ', completion)
+            const position = completion.position
+            const positionLeft = position.character
+            const range = completion.range
+            const start = range.start
+            const end = range.end
+            const completionText = completion.text.trimEnd()
+            let codeRange = new vscode.Range(new vscode.Position(start.line, positionLeft), new vscode.Position(end.line, end.character))
+            items.push({
+              insertText: completionText.substring(positionLeft),
+              range: codeRange
+            })
+          }
+        } catch (error) {
+          console.error(error)
+        }
+        updateStatus(false)
+        console.log('items: ', items.length)
         return { items }
       }
-      updateStatus(true)
-      try {
-        await checkEditorInfo()
-        const editor = vscode.window.activeTextEditor!
-        const workspaceFolder = await initWorkspace()
-        const uri = document.uri.toString()
-        const fileName = document.fileName
-        const text = document.getText()
-        const languageId = document.languageId
-        const res = await client.request('getCompletionsCycling', {
-          doc: {
-            source: text,
-            position: {
-              line: position.line,
-              character: position.character
-            },
-            // indentSize: 4,
-            // insertSpaces: true,
-            // tabSize: 4,
-            version: 0,
-            languageId,
-            uri: fileName,
-            path: fileName,
-            relativePath: path.relative(workspaceFolder, fileName)
-          }
-        })
-        console.log('res: ', res)
-        const completions = res.completions
-        for (let index = 0; index < completions.length; index++) {
-          const completion = completions[index]
-          // await client.request('notifyAccepted', {
-          //   uuid: completion.uuid
-          // })
-          console.log('completion: ', completion)
-          const position = completion.position
-          const positionLeft = position.character
-          const range = completion.range
-          const start = range.start
-          const end = range.end
-          const completionText = completion.text.trimEnd()
-          let codeRange = new vscode.Range(new vscode.Position(start.line, positionLeft), new vscode.Position(end.line, end.character))
-          items.push({
-            insertText: completionText.substring(positionLeft),
-            range: codeRange
-          })
-        }
-      } catch (error) {
-        console.error(error)
-      }
-      updateStatus(false)
-      console.log('items: ', items.length)
-      return { items }
-    }
-  })
-  subscriptions.push(inlineCompletionItemProviderDisposable)
+    })
+    subscriptions.push(inlineCompletionItemProviderDisposable)
+  }
 }
 
 async function activate({ subscriptions }: vscode.ExtensionContext) {
