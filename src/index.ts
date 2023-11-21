@@ -300,7 +300,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
           selectorArray.push(`${key}=${val}`)
         }
         const selectorString = selectorArray.join(',')
-        config.update('GithubCopilot.enable', selectorString)
+        config.update('GithubCopilot.enable', selectorString, vscode.ConfigurationTarget.Global)
         // HBuilderX 不会触发 change 事件
         if (hbx) {
           registerInlineCompletionItemProvider(subscriptions)
