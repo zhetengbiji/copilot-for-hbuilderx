@@ -272,7 +272,7 @@ async function signin() {
 async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions"]) {
   if (status === STATUS.enable) {
     const config = vscode.workspace.getConfiguration()
-    const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+    const enableAutoCompletions = selectorCache.get('*')
     const signout = `退出 GitHub Copilot？`
     const toggle = `${enableAutoCompletions ? '禁用' : '启用'}自动补全`
     const items = [`GitHub Copilot 状态: ${enableAutoCompletions ? '正常' : '已禁用'}`]
@@ -283,11 +283,17 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
     const res = await vscode.window.showQuickPick(items)
     if (res !== signout) {
       if (res === toggle) {
-        config.update('GithubCopilot.editor.enableAutoCompletions', !enableAutoCompletions)
+        selectorCache.set('*', !!enableAutoCompletions)
+        const selectorArray: Array<string> = []
+        for (const key in selectorCache) {
+          selectorArray.push(`${key}=${selectorCache.get(key)}`)
+        }
+        const selectorString = selectorArray.join(',')
+        config.update('GithubCopilot.enable', selectorString)
         // registerInlineCompletionItemProvider(subscriptions)
       } else if (res === settings) {
         if (hbx) {
-          hbx.workspace.gotoConfiguration("GithubCopilot.editor.enableAutoCompletions")
+          hbx.workspace.gotoConfiguration('GithubCopilot.editor.enableAutoCompletions')
         } else {
           vscode.commands.executeCommand('workbench.action.openSettings', 'GithubCopilot')
         }
@@ -302,6 +308,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
   }
 }
 
+const selectorCache: Map<string, boolean> = new Map()
 let inlineCompletionItemProviderDisposable: vscode.Disposable | null = null
 function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionContext["subscriptions"]) {
   if (inlineCompletionItemProviderDisposable) {
@@ -312,9 +319,6 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
     }
   }
   const config = vscode.workspace.getConfiguration()
-  if (!config.get('GithubCopilot.editor.enableAutoCompletions')) {
-    return
-  }
   const ALL_SELECTOR = [
     'abap',
     'bat',
@@ -446,16 +450,21 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
     if (!key || !val) {
       return
     }
-    const keys = key === 'all' || key === '*' ? ALL_SELECTOR : [key]
+    if (key === 'all') {
+      key = '*'
+    }
+    const keys = key === '*' ? ALL_SELECTOR : [key]
     if (val === 'true') {
-      keys.forEach((key) => {
-        selector.push(key)
+      keys.forEach((item) => {
+        selector.push(item)
+        selectorCache.set(key, true)
       })
     } else if (val === 'false') {
-      keys.forEach((key) => {
-        const index = selector.indexOf(key)
+      keys.forEach((item) => {
+        const index = selector.indexOf(item)
         if (index !== -1) {
           selector.splice(index, 1)
+          selectorCache.set(key, false)
         }
       })
     }
@@ -466,7 +475,9 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
       // fix position
       position = editor.selection.start
       const items: vscode.InlineCompletionItem[] = []
-      if (status === STATUS.disable) {
+      const config = vscode.workspace.getConfiguration()
+      const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+      if (status === STATUS.disable && enableAutoCompletions) {
         return { items }
       }
       updateStatus(true)
@@ -597,7 +608,7 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
     if (event.affectsConfiguration('GithubCopilot.status.show')) {
       updateStatus(status)
     }
-    if (event.affectsConfiguration('GithubCopilot.enable') || event.affectsConfiguration('GithubCopilot.editor.enableAutoCompletions')) {
+    if (event.affectsConfiguration('GithubCopilot.enable')) {
       registerInlineCompletionItemProvider(subscriptions)
     }
     if (event.affectsConfiguration('GithubCopilot.proxy.enable') || event.affectsConfiguration('GithubCopilot.proxy.host') || event.affectsConfiguration('GithubCopilot.proxy.user') || event.affectsConfiguration('GithubCopilot.proxy.strictSSL')) {
