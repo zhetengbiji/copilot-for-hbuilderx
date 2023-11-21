@@ -493,7 +493,7 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
         const items: vscode.InlineCompletionItem[] = []
         const config = vscode.workspace.getConfiguration()
         const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
-        if (status === STATUS.disable && enableAutoCompletions) {
+        if (status === STATUS.disable || !enableAutoCompletions) {
           return { items }
         }
         updateStatus(true)
