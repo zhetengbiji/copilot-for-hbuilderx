@@ -291,6 +291,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
     if (res !== signout) {
       if (res === toggle || res === toggleLanguage) {
         if (res === toggleLanguage) {
+          selectorCache.delete(languageId!)
           selectorCache.set(languageId!, !languageEnableAutoCompletions)
         } else {
           selectorCache.set('*', !enableAutoCompletions)
@@ -300,11 +301,10 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
           selectorArray.push(`${key}=${val}`)
         }
         const selectorString = selectorArray.join(',')
-        config.update('GithubCopilot.enable', selectorString, vscode.ConfigurationTarget.Global)
-        // HBuilderX 不会触发 change 事件
-        if (hbx) {
-          registerInlineCompletionItemProvider(subscriptions)
-        }
+        await config.update('GithubCopilot.enable', selectorString, vscode.ConfigurationTarget.Global)
+        // if (hbx) {
+        //   registerInlineCompletionItemProvider(subscriptions)
+        // }
       } else if (res === settings) {
         if (hbx) {
           hbx.workspace.gotoConfiguration('GithubCopilot.editor.enableAutoCompletions')
@@ -325,9 +325,11 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
 const selectorCache: Map<string, boolean> = new Map()
 let inlineCompletionItemProviderDisposable: vscode.Disposable | null = null
 function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionContext["subscriptions"]) {
-  selectorCache.clear()
   if (inlineCompletionItemProviderDisposable) {
-    inlineCompletionItemProviderDisposable.dispose()
+    try { inlineCompletionItemProviderDisposable.dispose() } catch (e) {
+      console.error(e)
+      throw e
+    }
     const index = subscriptions.indexOf(inlineCompletionItemProviderDisposable)
     if (index !== -1) {
       subscriptions.splice(index, 1)
@@ -458,6 +460,7 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
   ])
   const selector: string[] = []
   const enableSelector = config.get<string>('GithubCopilot.enable') || ''
+  selectorCache.clear()
   enableSelector.split(',').forEach((item) => {
     let [key, val] = item.split('=')
     key = key && key.trim()
