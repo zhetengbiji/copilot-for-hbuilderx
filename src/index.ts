@@ -11,8 +11,16 @@ try {
 }
 
 if (hbx) {
+  // 修复参数不一致
   vscode.window.showInformationMessage = function <T extends string>(message: string, ...items: T[]): Thenable<T | undefined> {
     return hbx.window.showInformationMessage(message, items)
+  }
+  // 补充缺失的类型
+  vscode.InlineCompletionTriggerKind = vscode.InlineCompletionTriggerKind || {
+    Invoke: 0,
+    Automatic: 1,
+    // 撤销，仅 HBuilderX 支持
+    Back: 2
   }
 }
 
@@ -509,15 +517,19 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
   console.log('selectorUse', selectorUse.join(','))
   if (selectorUse.length) {
     inlineCompletionItemProviderDisposable = vscode.languages.registerInlineCompletionItemProvider(selectorUse, {
-      async provideInlineCompletionItems(document: vscode.TextDocument) {
+      async provideInlineCompletionItems(document, position, context, token) {
+        console.log('context.triggerKind:', context.triggerKind)
         const editor = vscode.window.activeTextEditor!
         // fix HBuilderX position
-        const position = editor.selection.start
+        position = editor.selection.start
         const items: vscode.InlineCompletionItem[] = []
         const config = vscode.workspace.getConfiguration()
         const enableAutoCompletions = config.get('GithubCopilot.editor.enableAutoCompletions')
+        if (!((enableAutoCompletions && context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) || context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke)) {
+          return { items }
+        }
         // fix HBuilderX dispose
-        if (status === STATUS.disable || !enableAutoCompletions || !selector.includes(document.languageId)) {
+        if (status === STATUS.disable || !selector.includes(document.languageId)) {
           return { items }
         }
         updateStatus(true)
