@@ -26,4 +26,5 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 
 ## 注意事项
 
+- 首次安装后，如使用出现异常，可以尝试重启 HBuilderX。
 - 部分地区访问 GitHub Copilot 较慢，可以尝试在编辑器设置中配置 GitHub Copilot 插件代理。
