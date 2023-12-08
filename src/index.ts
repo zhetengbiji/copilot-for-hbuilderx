@@ -31,7 +31,8 @@ const child = fork(path.join(__dirname, '../dist/agent.js'), [
   // '--node-ipc', '--stdio' or '--socket={number}'
   '--stdio'
 ], {
-  stdio: 'pipe'
+  stdio: 'pipe',
+  execArgv: []
 })
 
 let connection = rpc.createMessageConnection(new rpc.StreamMessageReader(child.stdout!), new rpc.StreamMessageWriter(child.stdin!))
