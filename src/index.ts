@@ -1,9 +1,9 @@
 import { fork } from 'node:child_process'
-import * as os from 'node:os'
-import * as fs from 'node:fs'
 import * as rpc from 'vscode-jsonrpc/node'
-import path = require('node:path')
+import * as path from 'node:path'
 import vscode = require('vscode')
+import { chat } from './chat'
+
 // @ts-ignore
 let hbx: import('hbuilderx')
 try {
@@ -593,28 +593,19 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
   }
 }
 
-function getCachedToken() {
-  if (status === STATUS.enable) {
-    const home = os.homedir();
-    const configDir = path.join(home, '.config', 'github-copilot')
-    const hostsFile = path.join(configDir, 'hosts.json')
-
-    if (fs.existsSync(hostsFile)) {
-      const content = fs.readFileSync(hostsFile, { encoding: 'utf-8' })
-      const hosts = JSON.parse(content);
-      if ('github.com' in hosts) {
-        return hosts['github.com']['oauth_token'] as string
-      } else {
-        return null
-      }
+async function activate({ subscriptions }: vscode.ExtensionContext) {
+  function chatHandler() {
+    if (status === STATUS.enable) {
+      chat()
     }
   }
-  return null
-}
-
-async function activate({ subscriptions }: vscode.ExtensionContext) {
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.start', chatHandler))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.explain', chatHandler))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.fix', chatHandler))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.generateDocs', chatHandler))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.generateTests', chatHandler))
   const statusCommandId = 'copilot.status'
-  subscriptions.push(vscode.commands.registerCommand('copilot.status', () => {
+  subscriptions.push(vscode.commands.registerCommand(statusCommandId, () => {
     statusClick(subscriptions)
   }))
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
@@ -694,7 +685,6 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   vscode.window.visibleTextEditors.forEach(editor => {
     onDidOpenTextDocument(editor.document)
   })
-  console.log('cachedToken: ', getCachedToken())
 }
 
 function deactivate() { }

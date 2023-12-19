@@ -107,9 +107,86 @@
       {
         "command": "copilot.status",
         "title": "Copilot Status"
+      },
+      {
+        "command": "copilot.chat.start",
+        "title": "开始代码聊天"
+      },
+      {
+        "command": "copilot.chat.explain",
+        "title": "对此进行解释"
+      },
+      {
+        "command": "copilot.chat.fix",
+        "title": "修复此"
+      },
+      {
+        "command": "copilot.chat.generateDocs",
+        "title": "生成文档"
+      },
+      {
+        "command": "copilot.chat.generateTests",
+        "title": "生成测试"
       }
     ],
-    "menus": {},
+    "submenus": [
+      {
+        "id": "copilot.chat",
+        "label": "GitHub Copilot"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "copilot.chat",
+          "id": "copilotChatAction",
+          "title": "GitHub Copilot",
+          "group": "1copilotChat@0"
+        },
+        {
+          "command": "copilot.chat.start",
+          "group": "copilotChat@1"
+        },
+        {
+          "command": "copilot.chat.explain",
+          "group": "copilotChatAction@1"
+        },
+        {
+          "command": "copilot.chat.fix",
+          "group": "copilotChatAction@2"
+        },
+        {
+          "command": "copilot.chat.generateDocs",
+          "group": "copilotChatAction@3"
+        },
+        {
+          "command": "copilot.chat.generateTests",
+          "group": "copilotChatAction@4"
+        }
+      ],
+      "copilot.chat": [
+        {
+          "command": "copilot.chat.start",
+          "group": "copilotChat@1"
+        },
+        {
+          "command": "copilot.chat.explain",
+          "group": "copilotChatAction@1"
+        },
+        {
+          "command": "copilot.chat.fix",
+          "group": "copilotChatAction@2"
+        },
+        {
+          "command": "copilot.chat.generateDocs",
+          "group": "copilotChatAction@3"
+        },
+        {
+          "command": "copilot.chat.generateTests",
+          "group": "copilotChatAction@4"
+        }
+      ]
+    },
     "icons": {
       "copilot-enable": {
         "description": "copilot enable",
@@ -147,8 +224,12 @@
   },
   "devDependencies": {
     "@types/node": "^16",
+    "@types/node-fetch": "^2.6.9",
+    "@types/uuid": "^9.0.7",
     "@types/vscode": "^1.83.1",
     "esbuild": "^0.19.5",
-    "typescript": "^5.2.2"
+    "node-fetch": "^2.7.0",
+    "typescript": "^5.2.2",
+    "uuid": "^9.0.1"
   }
 }
