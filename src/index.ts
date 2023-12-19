@@ -3,6 +3,7 @@ import * as rpc from 'vscode-jsonrpc/node'
 import * as path from 'node:path'
 import vscode = require('vscode')
 import { chat } from './chat'
+import { EDITOR_NAME, EDITOR_PLUGIN_NAME, VERSION } from './env'
 
 // @ts-ignore
 let hbx: import('hbuilderx')
@@ -118,12 +119,12 @@ function getNetworkProxy() {
 async function setEditorInfo() {
   return await client.request('setEditorInfo', Object.assign({
     editorInfo: {
-      name: 'HBuilderX',
+      name: EDITOR_NAME,
       version: vscode.version
     },
     editorPluginInfo: {
-      name: 'GitHub Copilot for HBuilderX',
-      version: '0.3.2'
+      name: EDITOR_PLUGIN_NAME,
+      version: VERSION
     }
   }, getNetworkProxy()))
 }
@@ -157,7 +158,7 @@ async function initWorkspace() {
       trace: 'off',
       processId: process.pid,
       clientInfo: {
-        name: 'GitHub Copilot for HBuilderX'
+        name: EDITOR_PLUGIN_NAME
       }
     })
     const res = await setEditorInfo()
