@@ -1,4 +1,6 @@
 import { fork } from 'node:child_process'
+import * as os from 'node:os'
+import * as fs from 'node:fs'
 import * as rpc from 'vscode-jsonrpc/node'
 import path = require('node:path')
 import vscode = require('vscode')
@@ -591,6 +593,25 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
   }
 }
 
+function getCachedToken() {
+  if (status === STATUS.enable) {
+    const home = os.homedir();
+    const configDir = path.join(home, '.config', 'github-copilot')
+    const hostsFile = path.join(configDir, 'hosts.json')
+
+    if (fs.existsSync(hostsFile)) {
+      const content = fs.readFileSync(hostsFile, { encoding: 'utf-8' })
+      const hosts = JSON.parse(content);
+      if ('github.com' in hosts) {
+        return hosts['github.com']['oauth_token'] as string
+      } else {
+        return null
+      }
+    }
+  }
+  return null
+}
+
 async function activate({ subscriptions }: vscode.ExtensionContext) {
   const statusCommandId = 'copilot.status'
   subscriptions.push(vscode.commands.registerCommand('copilot.status', () => {
@@ -673,6 +694,7 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   vscode.window.visibleTextEditors.forEach(editor => {
     onDidOpenTextDocument(editor.document)
   })
+  console.log('cachedToken: ', getCachedToken())
 }
 
 function deactivate() { }
