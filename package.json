@@ -145,23 +145,23 @@
         },
         {
           "command": "copilot.chat.start",
-          "group": "copilotChat@1"
-        },
-        {
-          "command": "copilot.chat.explain",
           "group": "copilotChatAction@1"
         },
         {
-          "command": "copilot.chat.fix",
+          "command": "copilot.chat.explain",
           "group": "copilotChatAction@2"
         },
         {
-          "command": "copilot.chat.generateDocs",
+          "command": "copilot.chat.fix",
           "group": "copilotChatAction@3"
         },
         {
-          "command": "copilot.chat.generateTests",
+          "command": "copilot.chat.generateDocs",
           "group": "copilotChatAction@4"
+        },
+        {
+          "command": "copilot.chat.generateTests",
+          "group": "copilotChatAction@5"
         }
       ],
       "copilot.chat": [

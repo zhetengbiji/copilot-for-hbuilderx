@@ -595,16 +595,18 @@ function registerInlineCompletionItemProvider(subscriptions: vscode.ExtensionCon
 }
 
 async function activate({ subscriptions }: vscode.ExtensionContext) {
-  function chatHandler() {
-    if (status === STATUS.enable) {
-      chat()
+  function creatChatHandler(prompt?: string) {
+    return function () {
+      if (status === STATUS.enable) {
+        chat(prompt)
+      }
     }
   }
-  subscriptions.push(vscode.commands.registerCommand('copilot.chat.start', chatHandler))
-  subscriptions.push(vscode.commands.registerCommand('copilot.chat.explain', chatHandler))
-  subscriptions.push(vscode.commands.registerCommand('copilot.chat.fix', chatHandler))
-  subscriptions.push(vscode.commands.registerCommand('copilot.chat.generateDocs', chatHandler))
-  subscriptions.push(vscode.commands.registerCommand('copilot.chat.generateTests', chatHandler))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.start', creatChatHandler()))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.explain', creatChatHandler('对此进行解释')))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.fix', creatChatHandler('修复此')))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.generateDocs', creatChatHandler('生成文档')))
+  subscriptions.push(vscode.commands.registerCommand('copilot.chat.generateTests', creatChatHandler('生成测试')))
   const statusCommandId = 'copilot.status'
   subscriptions.push(vscode.commands.registerCommand(statusCommandId, () => {
     statusClick(subscriptions)
