@@ -43,15 +43,19 @@ let githubToken: string | null = null
 function getGithubToken() {
   if (!githubToken) {
     const home = os.homedir()
-    const configDir = path.join(home, '.config', 'github-copilot')
-    const hostsFile = path.join(configDir, 'hosts.json')
-
-    if (fs.existsSync(hostsFile)) {
-      const content = fs.readFileSync(hostsFile, { encoding: 'utf-8' })
-      const hosts = JSON.parse(content);
-      if ('github.com' in hosts) {
-        githubToken = hosts['github.com']['oauth_token'] as string
+    // ~/.config/github-copilot/hosts.json
+    let hostsFile = path.join(home, '.config', 'github-copilot', 'hosts.json')
+    if (!fs.existsSync(hostsFile)) {
+      // C:\Users\user\AppData\Local\github-copilot\hosts.json
+      hostsFile = path.join(home, 'AppData', 'Local', 'github-copilot', 'hosts.json')
+      if (!fs.existsSync(hostsFile)) {
+        return githubToken
       }
+    }
+    const content = fs.readFileSync(hostsFile, { encoding: 'utf-8' })
+    const hosts = JSON.parse(content);
+    if ('github.com' in hosts) {
+      githubToken = hosts['github.com']['oauth_token'] as string
     }
   }
   return githubToken
