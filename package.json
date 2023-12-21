@@ -44,7 +44,7 @@
     "vscode:prepublish": "npm run build",
     "prepack": "npm run build",
     "postpack": "node scripts/zip.js",
-    "build": "esbuild ./src/index.ts --bundle --outfile=out/index.js --external:vscode --format=cjs --platform=node --minify --drop:console",
+    "build": "rm -rf out/* && esbuild ./src/index.ts --bundle --outfile=out/index.js --external:vscode --format=cjs --platform=node --minify --drop:console",
     "watch": "tsc -watch -p ./"
   },
   "main": "./out/index.js",
