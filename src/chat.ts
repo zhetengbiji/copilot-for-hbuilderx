@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import vscode = require('vscode')
+import { COPILOT_NAME, getUser } from './env'
 
 const COPILOT_INSTRUCTIONS = `
 You are an AI programming assistant.
@@ -184,7 +185,7 @@ export async function chat(input?: string) {
   if (!prompt) {
     return
   }
-  outputChannelProxy.appendLine('User:')
+  outputChannelProxy.appendLine(`${getUser()}:`)
   const document = vscode.window.activeTextEditor?.document
   if (document) {
     const code = document?.getText(vscode.window.activeTextEditor!.selection) || ''
@@ -197,7 +198,7 @@ export async function chat(input?: string) {
   }
   history.push({ content: prompt, role: "user" })
   outputChannelProxy.appendLine(prompt)
-  outputChannelProxy.appendLine('GitHub Copilot:')
+  outputChannelProxy.appendLine(`${COPILOT_NAME}:`)
   const data = {
     intent: true,
     model: 'copilot-chat',

@@ -3,7 +3,7 @@ import * as rpc from 'vscode-jsonrpc/node'
 import * as path from 'node:path'
 import vscode = require('vscode')
 import { chat } from './chat'
-import { EDITOR_NAME, EDITOR_PLUGIN_NAME, VERSION } from './env'
+import { COPILOT_NAME, EDITOR_NAME, EDITOR_PLUGIN_NAME, VERSION, setUser } from './env'
 
 // @ts-ignore
 let hbx: import('hbuilderx')
@@ -205,20 +205,20 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
   switch (statusOrLoading) {
     case STATUS.loading:
       statusBarItem.text = (hbx ? '$(copilot-loading~spin)' : '$(loading~spin)') + fixString
-      statusBarItem.tooltip = 'GitHub Copilot 加载中...'
+      statusBarItem.tooltip = `${COPILOT_NAME} 加载中...`
       break
     case STATUS.warning:
       statusBarItem.text = '$(copilot-warning)' + fixString
-      statusBarItem.tooltip = 'GitHub Copilot 加载出错'
+      statusBarItem.tooltip = `${COPILOT_NAME} 加载出错`
       break
     case STATUS.disable:
       // Windows 拼接 Copilot 字符串
       statusBarItem.text = '$(copilot-disable)' + fixString
-      statusBarItem.tooltip = 'GitHub Copilot 未登录'
+      statusBarItem.tooltip = `${COPILOT_NAME} 未登录`
       break
     case STATUS.enable:
       statusBarItem.text = '$(copilot-enable)' + fixString
-      statusBarItem.tooltip = 'GitHub Copilot 已登录'
+      statusBarItem.tooltip = `${COPILOT_NAME} 已登录`
       break
   }
 }
@@ -228,7 +228,7 @@ async function checkStatus() {
   await initWorkspace()
   if (status === STATUS.disable) {
     await checkEditorInfo()
-    const res = await client.request('checkStatus', {
+    const res: { status: string, user?: string } = await client.request('checkStatus', {
       // options: { localChecksOnly: true }
     })
     console.log('res: ', res)
@@ -236,6 +236,7 @@ async function checkStatus() {
     // {"status":"OK","user":"zhetengbiji"}
     if (res.status === 'OK') {
       updateStatus(STATUS.enable)
+      setUser(res.user!)
     }
   }
   updateStatus(false)
@@ -288,7 +289,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
     const editor = vscode.window.activeTextEditor
     const languageId = editor?.document.languageId
     const languageEnableAutoCompletions = languageId ? (selector.includes(languageId)) : enableAutoCompletions
-    const items = [`GitHub Copilot 状态: ${languageEnableAutoCompletions ? '正常' : '已禁用'}`]
+    const items = [`${COPILOT_NAME} 状态: ${languageEnableAutoCompletions ? '正常' : '已禁用'}`]
     const toggle = `${enableAutoCompletions ? '禁用' : '启用'}自动补全`
     items.push(toggle)
     const toggleLanguage = `${languageEnableAutoCompletions ? '禁用' : '启用'} ${languageId} 的自动补全`
@@ -297,7 +298,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
     }
     const settings = '打开设置'
     items.push(settings)
-    const signout = `退出 GitHub Copilot`
+    const signout = `退出 ${COPILOT_NAME}`
     items.push(signout)
     const res = await vscode.window.showQuickPick(items)
     if (res !== signout) {
@@ -327,7 +328,7 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
       return
     }
   }
-  const message = `是否${status === STATUS.enable ? '退出' : '登录'} GitHub Copilot？`
+  const message = `是否${status === STATUS.enable ? '退出' : '登录'} ${COPILOT_NAME}？`
   const res = await vscode.window.showInformationMessage(message, '是', '否')
   if (res === '是') {
     status === STATUS.enable ? signout() : signin()
