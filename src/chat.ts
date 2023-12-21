@@ -3,6 +3,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
+import vscode = require('vscode')
 
 const COPILOT_INSTRUCTIONS = `You are an AI programming assistant.
 When asked for your name, you must respond with "GitHub Copilot".
@@ -165,6 +166,22 @@ function generateRequest(chatHistory: Chat[], codeExcerpt = '', language = "") {
   };
 }
 
+const outputChannel = vscode.window.createOutputChannel('CopilotChatOutput')
+const outputChannelProxy = (function (outputChannel: vscode.OutputChannel) {
+  let data = ''
+  return {
+    append: function (value: string) {
+      // HBuilderX 不支持 append
+      // outputChannel.append(value)
+      data += value
+    },
+    appendEnd: function () {
+      outputChannel.appendLine(data)
+      data = ''
+    }
+  }
+})(outputChannel)
+
 export async function chat() {
   const token = await getToken()
   if (!token) {
@@ -187,9 +204,17 @@ export async function chat() {
     "content-type": "application/json",
     "user-agent": "GitHubCopilotChat/0.4.1",
   }
-  const code = ''
-  const language = ''
-  const prompt = 'question'
+  const code = vscode.window.activeTextEditor?.document.getText(vscode.window.activeTextEditor.selection) || ''
+  const language = vscode.window.activeTextEditor?.document.languageId || ''
+  const inputRes = await vscode.window.showInputBox({
+    prompt: '请输入问题',
+    placeHolder: '',
+    value: ''
+  })
+  const prompt = inputRes || ''
+  if (!prompt) {
+    return
+  }
   history.push({ content: prompt, role: "user" })
   const data = generateRequest(history, code, language);
   console.log('data: ', data)
@@ -198,8 +223,51 @@ export async function chat() {
     headers,
     body: JSON.stringify(data)
   })
-  res.body.on('data', (chunk) => {
-    console.log('data chunk: ', chunk.toString())
+  outputChannel.show()
+  function receive(obj: {
+    choices: {
+      index: number;
+      delta: {
+        content: string;
+        role: string | null;
+      }
+    }[];
+    created: number;
+    id: string;
+  }) {
+    const content = obj.choices[0].delta.content
+    if (content) {
+      outputChannelProxy.append(content)
+    }
+  }
+  let all = ''
+  res.body.on('data', (data) => {
+    console.log('data chunk: ', data.toString())
+    const content = data.toString()
+    all += content
+    let next = true
+    while (next) {
+      const res = all.match(/data\: .+/)
+      if (res) {
+        const endStr = '\n\n'
+        const index = all.indexOf(endStr)
+        if (index > 0) {
+          const body = all.substring(6, index)
+          if (body === '[DONE]') {
+            all = ''
+            outputChannelProxy.appendEnd()
+            break
+          }
+          const obj = JSON.parse(body)
+          receive(obj)
+          all = all.substring(index + endStr.length)
+        } else {
+          next = false
+        }
+      } else {
+        next = false
+      }
+    }
   })
   res.body.on('end', () => {
     console.log('data end')
