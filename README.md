@@ -23,11 +23,12 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 - 接受建议： `Tab 键`
 - 拒绝建议： `Esc 键`
 - 主动触发编码建议：`Ctrl/Command 键` + `Alt 键` + `\ 键`
-- 开始代码聊天：编辑区选中代码右键，选择菜单 `GitHub Copilot`
+- 开始代码聊天：点击右下角 GitHub Copilot 图标或者编辑区选中代码右键，选择菜单 `GitHub Copilot` -> `开始代码聊天`
 
 ## 注意事项
 
 - 首次安装后，如使用出现异常，可以尝试重启 HBuilderX。
+- 卸载或者升级失败，可以尝试重启 HBuilderX。
 - 部分地区访问 GitHub Copilot 较慢，可以尝试在编辑器设置中配置 GitHub Copilot 插件代理。
 - GitHub Copilot Chat 为实验性功能，交互方式有待优化。
 
