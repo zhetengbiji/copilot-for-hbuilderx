@@ -23,7 +23,10 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 - 接受建议： `Tab 键`
 - 拒绝建议： `Esc 键`
 - 主动触发编码建议：`Ctrl/Command 键` + `Alt 键` + `\ 键`
-- 开始代码聊天：点击右下角 GitHub Copilot 图标或者编辑区选中代码右键，选择菜单 `GitHub Copilot` -> `开始代码聊天`
+- 开始代码聊天：
+  - `Ctrl/Command 键` + `I 键`
+  - 点击右下角 GitHub Copilot 图标
+  - 编辑区选中代码右键，选择菜单 `GitHub Copilot` -> `开始代码聊天`
 
 ## 注意事项
 
@@ -34,4 +37,4 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 
 ## 交流
 
-- QQ群：[697588509](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=AhzmBLdzgZD6Xcx7ry-kt_DtZKTt_yws&authKey=nEpQOU7P9J7WMbTf85TIAAeQqosVWsT5SAhzQ7OkwGsugFLdRqo6nKCIWV03Urw6&noverify=0&group_code=697588509)
+- QQ 群：[697588509](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=AhzmBLdzgZD6Xcx7ry-kt_DtZKTt_yws&authKey=nEpQOU7P9J7WMbTf85TIAAeQqosVWsT5SAhzQ7OkwGsugFLdRqo6nKCIWV03Urw6&noverify=0&group_code=697588509)
