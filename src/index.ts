@@ -296,6 +296,9 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
     if (languageId) {
       items.push(toggleLanguage)
     }
+
+    const chatStart = '开始代码聊天'
+    items.push(chatStart)
     const settings = '打开设置'
     items.push(settings)
     const signout = `退出 ${COPILOT_NAME}`
@@ -318,6 +321,8 @@ async function statusClick(subscriptions: vscode.ExtensionContext["subscriptions
         // if (hbx) {
         //   registerInlineCompletionItemProvider(subscriptions)
         // }
+      } else if (res === chatStart) {
+        chat()
       } else if (res === settings) {
         if (hbx) {
           hbx.workspace.gotoConfiguration('GithubCopilot.editor.enableAutoCompletions')
