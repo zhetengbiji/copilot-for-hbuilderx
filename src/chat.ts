@@ -135,7 +135,7 @@ type Chat = { content: string, role: string }
 
 const history: Chat[] = []
 
-const outputChannel = vscode.window.createOutputChannel('Github Copilot Chat')
+const outputChannel = vscode.window.createOutputChannel('Chat')
 const outputChannelProxy = (function (outputChannel: vscode.OutputChannel) {
   let data = ''
   return {
@@ -185,7 +185,7 @@ export async function chat(input?: string) {
   if (!prompt) {
     return
   }
-  outputChannelProxy.appendLine(`${getUser()}:`)
+  outputChannelProxy.appendLine(`🙋 ${getUser()}:`)
   const document = vscode.window.activeTextEditor?.document
   if (document) {
     const code = document?.getText(vscode.window.activeTextEditor!.selection) || ''
@@ -198,7 +198,7 @@ export async function chat(input?: string) {
   }
   history.push({ content: prompt, role: "user" })
   outputChannelProxy.appendLine(prompt)
-  outputChannelProxy.appendLine(`${COPILOT_NAME}:`)
+  outputChannelProxy.appendLine(`🤖 ${COPILOT_NAME}:`)
   const data = {
     intent: true,
     model: 'copilot-chat',
