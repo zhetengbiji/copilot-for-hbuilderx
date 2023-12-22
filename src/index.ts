@@ -696,7 +696,9 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   })
 }
 
-function deactivate() { }
+function deactivate() {
+  // TODO HBuilderX 卸载不会触发 deactivate
+}
 
 module.exports = {
   activate,
