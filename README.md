@@ -1,4 +1,4 @@
-# GitHub Copilot
+# GitHub Copilot for HBuilderX
 
 Your AI pair programmer
 
@@ -6,9 +6,9 @@ Your AI pair programmer
 
 GitHub Copilot 使用 OpenAI Codex 从你的编辑器实时建议代码和整个函数。经过数十亿行公共代码的训练，GitHub Copilot 会启用自然语言提示，GitHub Copilot 可以将自然语言提示(包括注释和方法名)转换为数十种语言的编码建议。
 
-本 [HBuilderX](https://www.dcloud.io/hbuilderx.html) 插件基于 [GitHub Copilot](https://github.com/features/copilot) 官方项目 [Copilot.vim](https://github.com/github/copilot.vim) 及开源项目 [CopilotChat.nvim](https://github.com/gptlang/CopilotChat.nvim) 开发。
+本 [HBuilderX](https://www.dcloud.io/hbuilderx.html) 插件基于 [GitHub Copilot](https://github.com/features/copilot) 官方项目 [Copilot.vim](https://github.com/github/copilot.vim) 开发。代码建议参考开源项目 [CopilotForXcode](https://github.com/intitni/CopilotForXcode)、代码聊天参考开源项目 [CopilotChat.nvim](https://github.com/gptlang/CopilotChat.nvim)、插件配置参考 Visual Studio Code 官方插件 [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot)。
 
-要了解更多信息，请访问 [https://github.com/features/copilot](https://github.com/features/copilot).
+要了解更多 GitHub Copilot 信息，请访问 [https://github.com/features/copilot](https://github.com/features/copilot).
 
 ## 订阅
 
@@ -25,7 +25,7 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 - 主动触发编码建议：`Ctrl/Command 键` + `Alt 键` + `\ 键`
 - 开始代码聊天：
   - `Ctrl/Command 键` + `I 键`
-  - 点击右下角 GitHub Copilot 图标
+  - 点击右下角 GitHub Copilot 图标 -> `开始代码聊天`
   - 编辑区选中代码右键，选择菜单 `GitHub Copilot` -> `开始代码聊天`
 
 ## 注意事项
