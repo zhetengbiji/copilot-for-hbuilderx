@@ -44,6 +44,8 @@
     "vscode:prepublish": "npm run build",
     "prepack": "npm run build",
     "postpack": "node scripts/zip.js",
+    "lint": "eslint --ext .ts src/**/*.ts",
+    "format": "prettier --write --parser typescript \"src/**/*.ts?(x)\"",
     "build": "rm -rf out/* && esbuild ./src/index.ts --bundle --outfile=out/index.js --external:vscode --format=cjs --platform=node --minify --drop:console",
     "watch": "tsc -watch -p ./"
   },
@@ -235,8 +237,12 @@
     "@types/node-fetch": "^2.6.9",
     "@types/uuid": "^9.0.7",
     "@types/vscode": "^1.83.1",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
     "esbuild": "^0.19.5",
+    "eslint": "^8.56.0",
     "node-fetch": "^2.7.0",
+    "prettier": "^3.1.1",
     "typescript": "^5.2.2",
     "uuid": "^9.0.1"
   }
