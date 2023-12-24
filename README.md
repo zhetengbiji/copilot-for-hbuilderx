@@ -18,7 +18,8 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 
 ## 使用方式
 
-点击右下角 GitHub Copilot 图标进行登录，登录后在编辑代码时 GitHub Copilot 会自动给出建议。
+1. 从 [HBuilderX 插件市场](https://ext.dcloud.net.cn/plugin?id=15241)下载并导入本插件。
+2. 点击 HBuilderX 右下角 GitHub Copilot 图标进行登录，登录后在编辑代码时 GitHub Copilot 会自动给出建议。
 
 - 接受建议： `Tab 键`
 - 拒绝建议： `Esc 键`
