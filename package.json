@@ -5,6 +5,15 @@
   "displayName": "GitHub Copilot",
   "version": "0.6.2",
   "publisher": "zhetengbiji",
+  "license": "GPL-3.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhetengbiji/copilot-for-hbuilderx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zhetengbiji/copilot-for-hbuilderx/issues"
+  },
   "engines": {
     "HBuilderX": "^3.8.5",
     "vscode": "^1.75.0",
