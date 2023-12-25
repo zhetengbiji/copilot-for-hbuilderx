@@ -57,36 +57,15 @@ const connection = rpc.createMessageConnection(
 )
 connection.listen()
 
-const client = {
-  request(method: string, params: any) {
-    console.log('request: ', method, params)
-    return connection.sendRequest<any>(method, params)
-  },
-  rejectAllPendingRequests(message: string): void {},
-  notify(method: string, params: any) {
-    // console.log('notify: ', method, params)
-    connection.sendNotification(method, params)
-  },
-}
-
-const server = {
-  addMethod(method: string, callback: (...params: any[]) => void) {
-    connection.onRequest(method, callback)
-  },
-}
-server.addMethod('LogMessage', params => {
+connection.onRequest('LogMessage', params => {
   console.log('LogMessage: ', params)
 })
-server.addMethod('featureFlagsNotification', params => {
+connection.onRequest('featureFlagsNotification', params => {
   console.log('featureFlagsNotification: ', params)
 })
-server.addMethod('statusNotification', params => {
+connection.onRequest('statusNotification', params => {
   console.log('statusNotification: ', params)
 })
-
-// child.stdout!.on('data', (data) => {
-//   console.log('stdout: ', data.toString())
-// })
 
 const workspaces: Record<string, {}> = {}
 
@@ -133,7 +112,7 @@ function getNetworkProxy() {
 }
 
 async function setEditorInfo() {
-  return await client.request(
+  return await connection.sendRequest<'OK'>(
     'setEditorInfo',
     Object.assign(
       {
@@ -173,7 +152,7 @@ async function initWorkspace() {
   console.log('workspaceFolder:', workspaceFolder)
   let item = workspaces[workspaceFolder]
   if (!item) {
-    await client.request('initialize', {
+    await connection.sendRequest<void>('initialize', {
       rootPath: workspaceFolder,
       rootUri: workspaceFolder,
       capabilities: {},
@@ -183,9 +162,11 @@ async function initWorkspace() {
         name: EDITOR_PLUGIN_NAME,
       },
     })
-    const res = await setEditorInfo()
-    console.log('res: ', res)
-    const version = await client.request('getVersion', {})
+    await setEditorInfo()
+    const version = await connection.sendRequest<{ version: string }>(
+      'getVersion',
+      {},
+    )
     console.log('version: ', version)
     item = {}
     workspaces[workspaceFolder] = item
@@ -194,22 +175,26 @@ async function initWorkspace() {
 }
 
 async function signout() {
-  client.rejectAllPendingRequests('cancel')
+  // TODO rejectAllPendingRequests('cancel')
   updateStatus(true)
   await checkEditorInfo()
-  await client.request('signOut', {})
-  updateStatus(STATUS.disable)
-  updateStatus(false)
-  vscode.window.showInformationMessage('已退出')
+  const res = await connection.sendRequest<SignedStatus>('signOut', {})
+  if (res.status === 'NotSignedIn') {
+    updateStatus(STATUS.NotSignedIn)
+    updateStatus(false)
+    vscode.window.showInformationMessage('已退出')
+  }
 }
 
 enum STATUS {
   loading,
   warning,
-  disable,
-  enable,
+  NotSignedIn,
+  // 同官方 IDEA 插件暂不单独处理此状态
+  NotAuthorized,
+  OK,
 }
-let status: STATUS = STATUS.disable
+let status: STATUS = STATUS.NotSignedIn
 let loading: boolean = false
 function updateStatus(statusOrLoading: STATUS | boolean) {
   if (typeof statusOrLoading === 'boolean') {
@@ -237,34 +222,33 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
       statusBarItem.text = '$(copilot-warning)' + fixString
       statusBarItem.tooltip = `${COPILOT_NAME} 加载出错`
       break
-    case STATUS.disable:
+    case STATUS.NotSignedIn:
       // Windows 拼接 Copilot 字符串
       statusBarItem.text = '$(copilot-disable)' + fixString
       statusBarItem.tooltip = `${COPILOT_NAME} 未登录`
       break
-    case STATUS.enable:
+    case STATUS.OK:
       statusBarItem.text = '$(copilot-enable)' + fixString
       statusBarItem.tooltip = `${COPILOT_NAME} 已登录`
       break
   }
 }
 
+type SignedStatus = {
+  status: 'OK' | 'NotSignedIn' | 'NotAuthorized'
+  user?: string
+}
+
 async function checkStatus() {
   updateStatus(true)
   await initWorkspace()
-  if (status === STATUS.disable) {
+  if (status === STATUS.NotSignedIn) {
     await checkEditorInfo()
-    const res: { status: string; user?: string } = await client.request(
-      'checkStatus',
-      {
-        // options: { localChecksOnly: true }
-      },
-    )
-    console.log('res: ', res)
-    // {"status":"NotSignedIn"}
-    // {"status":"OK","user":"zhetengbiji"}
+    const res = await connection.sendRequest<SignedStatus>('checkStatus', {
+      // options: { localChecksOnly: true }
+    })
     if (res.status === 'OK') {
-      updateStatus(STATUS.enable)
+      updateStatus(STATUS.OK)
       setUser(res.user!)
     }
   }
@@ -272,33 +256,57 @@ async function checkStatus() {
 }
 
 async function signin() {
-  if (status === STATUS.disable) {
+  if (status === STATUS.NotSignedIn) {
     updateStatus(true)
-    client.rejectAllPendingRequests('cancel')
+    // TODO rejectAllPendingRequests('cancel')
     try {
       await checkEditorInfo()
-      const res = await client.request('checkStatus', {
+      const res = await connection.sendRequest<SignedStatus>('checkStatus', {
         // options: { localChecksOnly: true }
       })
-      // {"status":"NotSignedIn"}
-      // {"status":"OK","user":"zhetengbiji"}
-      if (res.status === 'NotSignedIn') {
-        const res = await client.request('signInInitiate', {})
-        // {"status":"PromptUserDeviceFlow","userCode":"XXXX-XXXX","verificationUri":"https://github.com/login/device","expiresIn":899,"interval":5}
-        const message = `在浏览器中打开 ${res.verificationUri} 进行登录`
-        await vscode.window.showInformationMessage(message, '好的')
-        await vscode.env.openExternal(vscode.Uri.parse(res.verificationUri))
-        await vscode.env.clipboard.writeText(res.userCode)
-        vscode.window.showInformationMessage(
-          `验证码 ${res.userCode} 已复制到剪贴板`,
+      if (res.status !== 'OK') {
+        const res = await connection.sendRequest<{
+          status: 'PromptUserDeviceFlow'
+          userCode: string
+          verificationUri: string
+          expiresIn: number
+          interval: number
+        }>('signInInitiate', {})
+        const message = `在浏览器中打开 ${res.verificationUri} 进行登录，设备码：${res.userCode}`
+        const button = '复制并打开'
+        const input = await vscode.window.showInformationMessage(
+          message,
+          button,
         )
-        await client.request('signInConfirm', {
-          userCode: res.userCode,
-        })
-        vscode.window.showInformationMessage('登录成功')
-        updateStatus(STATUS.enable)
+        if (input === button) {
+          await vscode.env.clipboard.writeText(res.userCode)
+          vscode.window.showInformationMessage(
+            `设备码 ${res.userCode} 已复制到剪贴板`,
+          )
+          await vscode.env.openExternal(vscode.Uri.parse(res.verificationUri))
+          const res1 = await connection.sendRequest<SignedStatus>(
+            'signInConfirm',
+            {
+              userCode: res.userCode,
+            },
+          )
+          if (res1.status === 'OK') {
+            vscode.window.showInformationMessage('登录成功')
+            updateStatus(STATUS.OK)
+          } else if (res1.status === 'NotAuthorized') {
+            const url = 'https://github.com/settings/copilot'
+            const button = '好的'
+            const res = await vscode.window.showInformationMessage(
+              `你无法访问 ${COPILOT_NAME}。请访问 ${url} 进行注册。`,
+              button,
+            )
+            if (res === button) {
+              await vscode.env.openExternal(vscode.Uri.parse(url))
+            }
+          }
+        }
       } else {
-        updateStatus(STATUS.enable)
+        updateStatus(STATUS.OK)
       }
     } catch (error) {
       console.error(error)
@@ -311,10 +319,20 @@ async function signin() {
   }
 }
 
+function creatChatHandler(prompt?: string) {
+  return function () {
+    if (status === STATUS.OK) {
+      chat(prompt)
+    } else {
+      vscode.window.showErrorMessage(`请检查 ${COPILOT_NAME} 登录状态`)
+    }
+  }
+}
+
 async function statusClick(
   subscriptions: vscode.ExtensionContext['subscriptions'],
 ) {
-  if (status === STATUS.enable) {
+  if (status === STATUS.OK) {
     const config = vscode.workspace.getConfiguration()
     const enableAutoCompletions = !!selectorCache.get('*')
     const editor = vscode.window.activeTextEditor
@@ -365,7 +383,7 @@ async function statusClick(
         //   registerInlineCompletionItemProvider(subscriptions)
         // }
       } else if (res === chatStart) {
-        chat()
+        creatChatHandler()()
       } else if (res === settings) {
         if (hbx) {
           hbx.workspace.gotoConfiguration(
@@ -382,11 +400,11 @@ async function statusClick(
     }
   }
   const message = `是否${
-    status === STATUS.enable ? '退出' : '登录'
+    status === STATUS.OK ? '退出' : '登录'
   } ${COPILOT_NAME}？`
   const res = await vscode.window.showInformationMessage(message, '是', '否')
   if (res === '是') {
-    status === STATUS.enable ? signout() : signin()
+    status === STATUS.OK ? signout() : signin()
   }
 }
 
@@ -606,7 +624,7 @@ function registerInlineCompletionItemProvider(
           }
           // fix HBuilderX dispose
           if (
-            status === STATUS.disable ||
+            status === STATUS.NotSignedIn ||
             !selector.includes(document.languageId)
           ) {
             return { items }
@@ -620,7 +638,23 @@ function registerInlineCompletionItemProvider(
             const fileName = document.fileName
             const text = document.getText()
             const languageId = document.languageId
-            const res = await client.request('getCompletionsCycling', {
+            type Range = {
+              line: number
+              character: number
+            }
+            const res = await connection.sendRequest<{
+              completions: {
+                uuid: string
+                text: string
+                displayText: string
+                docVersion: number
+                range: {
+                  start: Range
+                  end: Range
+                }
+                position: Range
+              }[]
+            }>('getCompletionsCycling', {
               doc: {
                 source: text,
                 position: {
@@ -637,14 +671,13 @@ function registerInlineCompletionItemProvider(
                 relativePath: path.relative(workspaceFolder, fileName),
               },
             })
-            console.log('res: ', res)
+            console.log('getCompletionsCycling res: ', res)
             const completions = res.completions
             for (let index = 0; index < completions.length; index++) {
               const completion = completions[index]
-              // await client.request('notifyAccepted', {
+              // await connection.sendRequest('notifyAccepted', {
               //   uuid: completion.uuid
               // })
-              console.log('completion: ', completion)
               const position = completion.position
               const positionLeft = position.character
               const range = completion.range
@@ -664,7 +697,6 @@ function registerInlineCompletionItemProvider(
             console.error(error)
           }
           updateStatus(false)
-          console.log('items: ', items.length)
           return { items }
         },
       })
@@ -673,13 +705,6 @@ function registerInlineCompletionItemProvider(
 }
 
 async function activate({ subscriptions }: vscode.ExtensionContext) {
-  function creatChatHandler(prompt?: string) {
-    return function () {
-      if (status === STATUS.enable) {
-        chat(prompt)
-      }
-    }
-  }
   subscriptions.push(
     vscode.commands.registerCommand('copilot.chat.start', creatChatHandler()),
   )
@@ -722,12 +747,12 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   subscriptions.push(statusBarItem)
   statusBarItem.show()
   async function onDidOpenTextDocument(document: vscode.TextDocument) {
-    if (status === STATUS.enable) {
+    if (status === STATUS.OK) {
       await initWorkspace()
       const uri = document.uri.toString()
       const text = document.getText()
       const languageId = document.languageId
-      client.notify('textDocument/didOpen', {
+      connection.sendNotification('textDocument/didOpen', {
         textDocument: {
           text,
           languageId,
@@ -742,12 +767,12 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   )
   subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async function ({ document }) {
-      if (status === STATUS.enable) {
+      if (status === STATUS.OK) {
         await initWorkspace()
         const uri = document.uri.toString()
         const text = document.getText()
 
-        client.notify('textDocument/didChange', {
+        connection.sendNotification('textDocument/didChange', {
           contentChanges: [
             {
               text,
@@ -763,10 +788,10 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   )
   subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(async function (document) {
-      if (status === STATUS.enable) {
+      if (status === STATUS.OK) {
         await initWorkspace()
         const uri = document.uri.toString()
-        client.notify('textDocument/didSave', {
+        connection.sendNotification('textDocument/didSave', {
           textDocument: {
             uri,
           },
@@ -776,10 +801,10 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   )
   subscriptions.push(
     vscode.workspace.onDidCloseTextDocument(async function (document) {
-      if (status === STATUS.enable) {
+      if (status === STATUS.OK) {
         await initWorkspace()
         const uri = document.uri.toString()
-        client.notify('textDocument/didClose', {
+        connection.sendNotification('textDocument/didClose', {
           textDocument: {
             uri,
           },
