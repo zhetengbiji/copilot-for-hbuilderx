@@ -1467,6 +1467,7 @@
           send.click()
         }
       })
+      // TODO check hbuilderx ready
       setTimeout(() => {
         function callback (message) {
           switch (message.command) {
@@ -1487,7 +1488,7 @@
         vscode.postMessage({
           command: 'ready'
         })
-      }, 20)
+      }, 200)
     </script>
   </body>
 
