@@ -149,6 +149,12 @@ async function initWorkspace() {
   } catch (e) {
     console.error(e)
   }
+  workspaceFolder = workspaceFolder.replace(
+    /^\/([A-Z]+):\/(.+)/,
+    function (_, p1, p2) {
+      return `${p1.toLowerCase()}:\\${p2.replace(/\//g, '\\')}`
+    },
+  )
   console.log('workspaceFolder:', workspaceFolder)
   let item = workspaces[workspaceFolder]
   if (!item) {
