@@ -63,6 +63,25 @@
     "*"
   ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "github-copilot-chat-activitybar",
+          "title": "GitHub Copilot Chat",
+          "icon": "Github-Copilot-Chat.svg"
+        }
+      ]
+    },
+    "views": {
+      "github-copilot-chat-activitybar": [
+        {
+          "id": "github-copilot-chat-activitybar",
+          "title": "GitHub Copilot Chat",
+          "name": "GitHub Copilot Chat",
+          "icon": "Github-Copilot-Chat.svg"
+        }
+      ]
+    },
     "configuration": {
       "title": "GitHub Copilot",
       "properties": {

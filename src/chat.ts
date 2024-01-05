@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import vscode = require('vscode')
 import { COPILOT_NAME, getUser } from './env'
+import * as outputChannel from './output'
 
 const COPILOT_INSTRUCTIONS = `
 You are an AI programming assistant.
@@ -144,27 +145,15 @@ type Chat = { content: string; role: string }
 
 const history: Chat[] = []
 
-const outputChannel = vscode.window.createOutputChannel('Chat')
-const outputChannelProxy = (function (outputChannel: vscode.OutputChannel) {
-  let data = ''
-  return {
-    append: function (value: string) {
-      // HBuilderX 不支持 append
-      // outputChannel.append(value)
-      // TODO 按行结算
-      data += value
-    },
-    appendEnd: function () {
-      outputChannel.appendLine(data)
-      data = ''
-    },
-    appendLine: function (value: string) {
-      outputChannel.appendLine(value)
-    },
-  }
-})(outputChannel)
-
 export async function chat(input?: string) {
+  const document = vscode.window.activeTextEditor?.document
+  const code =
+    document?.getText(vscode.window.activeTextEditor!.selection) || ''
+  outputChannel.show()
+  const prompt = input || ''
+  if (!prompt) {
+    return
+  }
   const token = await getToken()
   if (!token) {
     return
@@ -186,34 +175,18 @@ export async function chat(input?: string) {
     'content-type': 'application/json',
     'user-agent': 'GitHubCopilotChat/0.4.1',
   }
-  const prompt =
-    input ||
-    (await vscode.window.showInputBox({
-      // prompt: '询问 Copilot 问题',
-      placeHolder: '询问 Copilot',
-      // value: ''
-    })) ||
-    ''
-  if (!prompt) {
-    return
-  }
-  outputChannelProxy.appendLine(`🙋 ${getUser()}:`)
-  const document = vscode.window.activeTextEditor?.document
+  outputChannel.appendLine(`🙋 ${getUser()}:`)
   if (document) {
-    const code =
-      document?.getText(vscode.window.activeTextEditor!.selection) || ''
     const fileName = path.basename(document.fileName)
     history.push({
       content: `Active selection:\n\n\nFrom the file: ${document.fileName}\n\`\`\`${document.languageId}\n${code}\n\`\`\`\n\n`,
       role: 'user',
     })
-    outputChannelProxy.appendLine(
-      `Used 1 reference: ${fileName}:${code.length}`,
-    )
+    outputChannel.appendLine(`Used 1 reference: ${fileName}:${code.length}`)
   }
   history.push({ content: prompt, role: 'user' })
-  outputChannelProxy.appendLine(prompt)
-  outputChannelProxy.appendLine(`🤖 ${COPILOT_NAME}:`)
+  outputChannel.appendLine(prompt)
+  outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
   const data = {
     intent: true,
     model: 'copilot-chat',
@@ -234,7 +207,6 @@ export async function chat(input?: string) {
     headers,
     body: JSON.stringify(data),
   })
-  outputChannel.show()
   function receive(obj: {
     choices: {
       index: number
@@ -248,7 +220,7 @@ export async function chat(input?: string) {
   }) {
     const content = obj.choices[0].delta.content
     if (content) {
-      outputChannelProxy.append(content)
+      outputChannel.append(content)
     }
   }
   let all = ''
@@ -266,7 +238,7 @@ export async function chat(input?: string) {
           const body = all.substring(6, index)
           if (body === '[DONE]') {
             all = ''
-            outputChannelProxy.appendEnd()
+            outputChannel.appendLine('')
             break
           }
           const obj = JSON.parse(body)
@@ -284,3 +256,5 @@ export async function chat(input?: string) {
     console.log('data end')
   })
 }
+
+outputChannel.onInput(chat)

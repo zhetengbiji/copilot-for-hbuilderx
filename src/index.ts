@@ -12,7 +12,7 @@ import {
 } from './env'
 
 // @ts-ignore
-let hbx: import('hbuilderx')
+let hbx: typeof import('hbuilderx')
 try {
   hbx = require('hbuilderx')
 } catch (error) {
