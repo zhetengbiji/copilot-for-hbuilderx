@@ -149,12 +149,6 @@ async function initWorkspace() {
   } catch (e) {
     console.error(e)
   }
-  workspaceFolder = workspaceFolder.replace(
-    /^\/([A-Z]+):\/(.+)/,
-    function (_, p1, p2) {
-      return `${p1.toLowerCase()}:\\${p2.replace(/\//g, '\\')}`
-    },
-  )
   console.log('workspaceFolder:', workspaceFolder)
   let item = workspaces[workspaceFolder]
   if (!item) {
@@ -648,6 +642,30 @@ function registerInlineCompletionItemProvider(
               line: number
               character: number
             }
+            const doc = {
+              source: text,
+              position: {
+                line: position.line,
+                character: position.character,
+              },
+              // indentSize: 4,
+              // insertSpaces: true,
+              // tabSize: 4,
+              version: 0,
+              languageId,
+              uri,
+              path: fileName,
+              relativePath: path.relative(
+                workspaceFolder.replace(
+                  /^\/([A-Z]+):\/(.+)/,
+                  function (_, p1, p2) {
+                    return `${p1.toLowerCase()}:\\${p2.replace(/\//g, '\\')}`
+                  },
+                ),
+                fileName,
+              ),
+            }
+            console.log('doc: ', doc)
             const res = await connection.sendRequest<{
               completions: {
                 uuid: string
@@ -661,21 +679,7 @@ function registerInlineCompletionItemProvider(
                 position: Range
               }[]
             }>('getCompletionsCycling', {
-              doc: {
-                source: text,
-                position: {
-                  line: position.line,
-                  character: position.character,
-                },
-                // indentSize: 4,
-                // insertSpaces: true,
-                // tabSize: 4,
-                version: 0,
-                languageId,
-                uri: fileName,
-                path: fileName,
-                relativePath: path.relative(workspaceFolder, fileName),
-              },
+              doc,
             })
             console.log('getCompletionsCycling res: ', res)
             const completions = res.completions
