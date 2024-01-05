@@ -748,8 +748,10 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   statusBarItem.show()
   async function onDidOpenTextDocument(document: vscode.TextDocument) {
     if (status === STATUS.OK) {
-      await initWorkspace()
       const uri = document.uri.toString()
+      if (uri.startsWith('output:')) {
+        return
+      }
       const text = document.getText()
       const languageId = document.languageId
       connection.sendNotification('textDocument/didOpen', {
@@ -768,8 +770,11 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async function ({ document }) {
       if (status === STATUS.OK) {
-        await initWorkspace()
         const uri = document.uri.toString()
+        if (uri.startsWith('output:')) {
+          return
+        }
+        await initWorkspace()
         const text = document.getText()
 
         connection.sendNotification('textDocument/didChange', {
@@ -802,8 +807,11 @@ async function activate({ subscriptions }: vscode.ExtensionContext) {
   subscriptions.push(
     vscode.workspace.onDidCloseTextDocument(async function (document) {
       if (status === STATUS.OK) {
-        await initWorkspace()
         const uri = document.uri.toString()
+        if (uri.startsWith('output:')) {
+          return
+        }
+        await initWorkspace()
         connection.sendNotification('textDocument/didClose', {
           textDocument: {
             uri,
