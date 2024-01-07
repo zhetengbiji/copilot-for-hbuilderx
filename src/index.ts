@@ -208,8 +208,10 @@ function updateStatus(statusOrLoading: STATUS | boolean) {
   }
   const config = vscode.workspace.getConfiguration()
   const statusConfig = config.get('GithubCopilot.status.show')
+  // 默认 auto 用于处理部分设备 HBuilderX 首次启动不显示图标的问题
   const fixString =
-    statusConfig === 'icon+text' || (statusConfig !== 'icon' && isWin)
+    statusConfig === 'icon+text' ||
+    (statusConfig === 'auto' && isWin && status === STATUS.NotSignedIn)
       ? 'Copilot'
       : ''
   switch (statusOrLoading) {
