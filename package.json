@@ -68,7 +68,11 @@
         {
           "id": "github-copilot-chat-activitybar",
           "title": "GitHub Copilot Chat",
-          "icon": "Github-Copilot-Chat.svg"
+          "icon": {
+            "Atom One Dark": "Github-Copilot-Chat-Dark.svg",
+            "Monokai": "Github-Copilot-Chat-Dark.svg",
+            "Default": "Github-Copilot-Chat-Default.svg"
+          }
         }
       ]
     },
