@@ -13,8 +13,8 @@ if (hbx) {
   vscode.window.createWebviewPanel = function (
     viewType: string,
     title: string,
-    showOptions: any,
-    options: any,
+    showOptions: unknown,
+    options: unknown,
   ): vscode.WebviewPanel {
     const panel = hbx.window.createWebView(viewType, options)
     Object.defineProperty(panel, 'webview', {
@@ -44,7 +44,7 @@ let webviewPanel: vscode.WebviewPanel | null = null
 let ready = false
 
 export function append(text: string) {
-  let line = lines[lines.length - 1]
+  const line = lines[lines.length - 1]
   if (!line || line.end) {
     lines.push({ text: text, end: false })
   } else {
@@ -92,14 +92,14 @@ function initVar(htmlContent: string): string {
   if (!hbx) {
     return htmlContent
   }
-  let config = hbx.workspace.getConfiguration()
-  let colorScheme = (
+  const config = hbx.workspace.getConfiguration()
+  const colorScheme = (
     (config.get('editor.colorScheme') || 'Default') as
       | 'Atom One Dark'
       | 'Monokai'
       | 'Default'
   ).toLocaleLowerCase()
-  let colorKey = (colorScheme.includes('dark') ? 'dark' : colorScheme) as
+  const colorKey = (colorScheme.includes('dark') ? 'dark' : colorScheme) as
     | 'default'
     | 'dark'
     | 'monokai'
