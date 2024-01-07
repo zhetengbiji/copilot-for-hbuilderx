@@ -217,33 +217,55 @@ export async function chat(input?: string) {
     }[]
     created: number
     id: string
+    promipt_filter_results: {
+      content_filter_results: {
+        hate: {
+          filtered: boolean
+          serverity: 'safe'
+        }
+        self_harm: {
+          filtered: boolean
+          serverity: 'safe'
+        }
+        sexual: {
+          filtered: boolean
+          serverity: 'safe'
+        }
+        violence: {
+          filtered: boolean
+          serverity: 'safe'
+        }
+      }
+      prompt_index: number
+    }[]
   }) {
-    const content = obj.choices[0].delta.content
+    const content = obj.choices[0]?.delta.content
     if (content) {
       outputChannel.append(content)
     }
   }
-  let all = ''
-  res.body.on('data', data => {
+  let all = Buffer.alloc(0)
+  res.body.on('data', (data: Uint8Array) => {
     console.log('data chunk: ', data.toString())
-    const content = data.toString()
-    all += content
+    all = Buffer.concat([all, data])
     let next = true
     while (next) {
-      const res = all.match(/data: .+/)
+      const allStr = all.toString()
+      const start = 'data: '
+      const res = allStr.startsWith(start)
       if (res) {
         const endStr = '\n\n'
-        const index = all.indexOf(endStr)
+        const index = allStr.indexOf(endStr)
         if (index > 0) {
-          const body = all.substring(6, index)
+          const body = allStr.substring(6, index)
           if (body === '[DONE]') {
-            all = ''
+            all = Buffer.alloc(0)
             outputChannel.appendLine('')
             break
           }
           const obj = JSON.parse(body)
           receive(obj)
-          all = all.substring(index + endStr.length)
+          all = all.slice(Buffer.from(start + body + endStr).length)
         } else {
           next = false
         }
