@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import vscode = require('vscode')
-import { COPILOT_NAME, getUser } from './env'
+import { COPILOT_NAME } from './env'
 import * as outputChannel from './output'
 
 const COPILOT_INSTRUCTIONS = `
@@ -40,7 +40,13 @@ The active document is the source code the user is looking at right now.
 You can only give one reply for each conversation turn.
 Respond in the following locale: zh-cn`
 
-let githubToken: string | null = null
+let githubToken: {
+  user: string
+  oauth_token: string
+  dev_override?: {
+    copilot_token_url?: string
+  }
+} | null = null
 
 function getGithubToken() {
   if (!githubToken) {
@@ -57,14 +63,17 @@ function getGithubToken() {
         'hosts.json',
       )
       if (!fs.existsSync(hostsFile)) {
-        return githubToken
+        throw new Error('获取 GitHub Token 文件失败')
       }
     }
     const content = fs.readFileSync(hostsFile, { encoding: 'utf-8' })
     const hosts = JSON.parse(content)
     if ('github.com' in hosts) {
-      githubToken = hosts['github.com']['oauth_token'] as string
+      githubToken = hosts['github.com']
     }
+  }
+  if (!githubToken) {
+    throw new Error('获取 GitHub Token 失败')
   }
   return githubToken
 }
@@ -105,13 +114,12 @@ async function getToken() {
     return token
   }
   const githubToken = getGithubToken()
-  if (!githubToken) {
-    return
-  }
   console.log('githubToken: ', githubToken)
-  const url = 'https://api.github.com/copilot_internal/v2/token'
+  const url =
+    githubToken.dev_override?.copilot_token_url ||
+    'https://api.github.com/copilot_internal/v2/token'
   const headers = {
-    authorization: `token ${githubToken}`,
+    authorization: `token ${githubToken.oauth_token}`,
     'editor-version': 'vscode/1.80.1',
     'editor-plugin-version': 'copilot-chat/0.4.1',
     'user-agent': 'GitHubCopilotChat/0.4.1',
@@ -154,8 +162,12 @@ export async function chat(input?: string) {
   if (!prompt) {
     return
   }
-  const token = await getToken()
-  if (!token) {
+  let authorization = ''
+  try {
+    const token = await getToken()
+    authorization = `Bearer ${token}`
+  } catch (error) {
+    vscode.window.showErrorMessage((error as Error).message)
     return
   }
   const vscodeSessionid = getVscodeSessionid()
@@ -164,7 +176,7 @@ export async function chat(input?: string) {
   console.log('machineid:', machineid)
   const url = 'https://copilot-proxy.githubusercontent.com/v1/chat/completions'
   const headers = {
-    authorization: `Bearer ${token}`,
+    authorization,
     'x-request-id': uuidv4(),
     'vscode-sessionid': vscodeSessionid,
     machineid: machineid,
@@ -175,7 +187,7 @@ export async function chat(input?: string) {
     'content-type': 'application/json',
     'user-agent': 'GitHubCopilotChat/0.4.1',
   }
-  outputChannel.appendLine(`🙋 ${getUser()}:`)
+  outputChannel.appendLine(`🙋 ${githubToken!.user}:`)
   if (document) {
     const fileName = path.basename(document.fileName)
     history.push({
@@ -276,6 +288,10 @@ export async function chat(input?: string) {
   })
   res.body.on('end', () => {
     console.log('data end')
+    if (all.length > 0) {
+      const allStr = all.toString()
+      vscode.window.showErrorMessage(allStr)
+    }
   })
 }
 

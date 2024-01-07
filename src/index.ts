@@ -3,13 +3,7 @@ import * as rpc from 'vscode-jsonrpc/node'
 import * as path from 'node:path'
 import vscode = require('vscode')
 import { chat } from './chat'
-import {
-  COPILOT_NAME,
-  EDITOR_NAME,
-  EDITOR_PLUGIN_NAME,
-  VERSION,
-  setUser,
-} from './env'
+import { COPILOT_NAME, EDITOR_NAME, EDITOR_PLUGIN_NAME, VERSION } from './env'
 
 // @ts-ignore
 let hbx: typeof import('hbuilderx')
@@ -251,7 +245,6 @@ async function checkStatus() {
     })
     if (res.status === 'OK') {
       updateStatus(STATUS.OK)
-      setUser(res.user!)
     }
   }
   updateStatus(false)
