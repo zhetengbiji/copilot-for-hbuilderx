@@ -134,6 +134,19 @@
           "type": "string",
           "default": "",
           "description": "代理服务用户（用户名:密码）"
+        },
+        "GithubCopilot.chat.role": {
+          "type": "string",
+          "default": "copilot",
+          "description": "聊天角色限定",
+          "enum": [
+            "copilot",
+            "free"
+          ],
+          "enumDescriptions": [
+            "编程助理",
+            "无限制"
+          ]
         }
       }
     },

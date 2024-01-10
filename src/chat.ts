@@ -109,6 +109,12 @@ type ResponseData = {
 
 let token: string | null = null
 
+const HEADERS = {
+  'editor-version': 'vscode/1.85.1',
+  'editor-plugin-version': 'copilot-chat/0.12.2023120701',
+  'user-agent': 'GitHubCopilotChat/0.12.2023120701',
+}
+
 async function getToken() {
   if (token) {
     return token
@@ -118,12 +124,12 @@ async function getToken() {
   const url =
     githubToken.dev_override?.copilot_token_url ||
     'https://api.github.com/copilot_internal/v2/token'
-  const headers = {
-    authorization: `token ${githubToken.oauth_token}`,
-    'editor-version': 'vscode/1.80.1',
-    'editor-plugin-version': 'copilot-chat/0.4.1',
-    'user-agent': 'GitHubCopilotChat/0.4.1',
-  }
+  const headers = Object.assign(
+    {
+      authorization: `token ${githubToken.oauth_token}`,
+    },
+    HEADERS,
+  )
   const res = await fetch(url, {
     method: 'GET',
     headers,
@@ -174,19 +180,19 @@ export async function chat(input?: string) {
   console.log('vscodeSessionid:', vscodeSessionid)
   const machineid = getMachineid()
   console.log('machineid:', machineid)
-  const url = 'https://copilot-proxy.githubusercontent.com/v1/chat/completions'
-  const headers = {
-    authorization,
-    'x-request-id': uuidv4(),
-    'vscode-sessionid': vscodeSessionid,
-    machineid: machineid,
-    'editor-version': 'vscode/1.80.1',
-    'editor-plugin-version': 'copilot-chat/0.4.1',
-    'openai-organization': 'github-copilot',
-    'openai-intent': 'conversation-panel',
-    'content-type': 'application/json',
-    'user-agent': 'GitHubCopilotChat/0.4.1',
-  }
+  const url = 'https://api.githubcopilot.com/chat/completions'
+  const headers = Object.assign(
+    {
+      authorization,
+      'x-request-id': uuidv4(),
+      'vscode-sessionid': vscodeSessionid,
+      machineid: machineid,
+      'openai-organization': 'github-copilot',
+      'openai-intent': 'conversation-panel',
+      'content-type': 'application/json',
+    },
+    HEADERS,
+  )
   outputChannel.appendLine(`🙋 ${githubToken!.user}:`)
   if (document) {
     const fileName = path.basename(document.fileName)
@@ -199,19 +205,23 @@ export async function chat(input?: string) {
   history.push({ content: prompt, role: 'user' })
   outputChannel.appendLine(prompt)
   outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
+  const messages: Chat[] = []
+  const config = vscode.workspace.getConfiguration()
+  const role = config.get<string>('GithubCopilot.chat.role', 'copilot')
+  if (role === 'copilot') {
+    messages.push({
+      content: COPILOT_INSTRUCTIONS,
+      role: 'system',
+    })
+  }
   const data = {
     intent: true,
-    model: 'copilot-chat',
+    model: 'gpt-4',
     n: 1,
     stream: true,
     temperature: 0.1,
     top_p: 1,
-    messages: [
-      {
-        content: COPILOT_INSTRUCTIONS,
-        role: 'system',
-      },
-    ].concat(history),
+    messages: messages.concat(history),
   }
   console.log('data: ', data)
   const res = await fetch(url, {
@@ -220,7 +230,7 @@ export async function chat(input?: string) {
     body: JSON.stringify(data),
   })
   function receive(obj: {
-    choices: {
+    choices?: {
       index: number
       delta: {
         content: string
@@ -251,7 +261,7 @@ export async function chat(input?: string) {
       prompt_index: number
     }[]
   }) {
-    const content = obj.choices[0]?.delta.content
+    const content = obj.choices?.[0]?.delta.content
     if (content) {
       outputChannel.append(content)
     }
