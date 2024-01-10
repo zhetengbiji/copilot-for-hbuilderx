@@ -136,12 +136,17 @@ async function initWorkspace() {
   let workspaceFolder = '/'
   try {
     workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath
-    if (hbx) {
-      const editor = await hbx.window.getActiveTextEditor()
-      workspaceFolder = editor.document.workspaceFolder.uri.path
-    }
   } catch (e) {
     console.error(e)
+  }
+  // 无激活的编辑器时 HBuilderX getActiveTextEditor 既不会报错也不会返回值
+  if (hbx && vscode.window.activeTextEditor) {
+    try {
+      const editor = await hbx.window.getActiveTextEditor()
+      workspaceFolder = editor.document.workspaceFolder.uri.path
+    } catch (e) {
+      console.error(e)
+    }
   }
   console.log('workspaceFolder:', workspaceFolder)
   let item = workspaces[workspaceFolder]
