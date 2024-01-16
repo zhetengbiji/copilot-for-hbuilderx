@@ -3,7 +3,7 @@
   "name": "copilot-for-hbuilderx",
   "description": "Your AI pair programmer",
   "displayName": "GitHub Copilot",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "publisher": "zhetengbiji",
   "license": "GPL-3.0",
   "private": true,
