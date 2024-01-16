@@ -36,6 +36,15 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 - 部分地区访问 GitHub Copilot 较慢，可以尝试在编辑器设置中配置 GitHub Copilot 插件代理。
 - GitHub Copilot Chat 为实验性功能，交互方式有待优化。
 
-## 交流
+## 问题反馈与使用交流
 
 - QQ 群：[697588509](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=AhzmBLdzgZD6Xcx7ry-kt_DtZKTt_yws&authKey=nEpQOU7P9J7WMbTf85TIAAeQqosVWsT5SAhzQ7OkwGsugFLdRqo6nKCIWV03Urw6&noverify=0&group_code=697588509)
+
+## 支持本项目
+
+可以通过以下任意方式激励来加速本项目的发展：
+
+* 在 [HBuilderX 插件市场](https://ext.dcloud.net.cn/plugin?id=15241) 下载本插件或真心评价。
+* 在 [GitHub 开源仓库](https://github.com/zhetengbiji/copilot-for-hbuilderx) 给予 Star 或贡献有效代码。
+* 在 [HBuilderX 插件市场](https://ext.dcloud.net.cn/plugin?id=15241) 或 [爱发电](https://afdian.net/a/zhetengbiji) 进行赞助。
+* 在 [QQ 交流群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=AhzmBLdzgZD6Xcx7ry-kt_DtZKTt_yws&authKey=nEpQOU7P9J7WMbTf85TIAAeQqosVWsT5SAhzQ7OkwGsugFLdRqo6nKCIWV03Urw6&noverify=0&group_code=697588509) 帮助其他开发者解答使用中遇到的问题。
