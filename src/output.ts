@@ -43,31 +43,40 @@ const lines: Array<Line> = []
 let webviewPanel: vscode.WebviewPanel | null = null
 let ready = false
 
+function createLine(): Line {
+  return {
+    text: '',
+    end: false,
+  }
+}
+
 export function append(text: string) {
-  const line = lines[lines.length - 1]
+  let line = lines[lines.length - 1]
   if (!line || line.end) {
-    lines.push({ text: text, end: false })
-  } else {
-    line.text += text
+    line = createLine()
+    lines.push(line)
+  }
+  line.text += text
+  if (ready) {
+    webviewPanel?.webview.postMessage({
+      command: 'append',
+      text: text,
+    })
   }
 }
 
 export function appendLine(text: string) {
   let line = lines[lines.length - 1]
-  if (line && !line.end) {
-    line.text += text
-    line.end = true
-  } else {
-    line = {
-      text: text,
-      end: true,
-    }
+  if (!line || line.end) {
+    line = createLine()
     lines.push(line)
   }
+  line.text += text
+  line.end = true
   if (ready) {
     webviewPanel?.webview.postMessage({
       command: 'appendLine',
-      text: line.text,
+      text: text,
     })
   }
 }
@@ -173,12 +182,10 @@ export function show() {
     if (message.command === 'ready') {
       ready = true
       lines.forEach(line => {
-        if (line.end) {
-          webviewPanel?.webview.postMessage({
-            command: 'appendLine',
-            text: line.text,
-          })
-        }
+        webviewPanel?.webview.postMessage({
+          command: line.end ? 'appendLine' : 'append',
+          text: line.text,
+        })
       })
     } else if (message.command === 'input') {
       const input = message.text

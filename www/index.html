@@ -1477,10 +1477,30 @@
         function callback (message) {
           switch (message.command) {
             case 'appendLine': {
-              const line = document.createElement('div')
-              line.innerHTML = marked.parse(message.text)
               const list = document.getElementById('list')
-              list.appendChild(line)
+              let line = list.querySelector('div:last-child')
+              if (!line || line.__end) {
+                line = document.createElement('div')
+                list.appendChild(line)
+              }
+              line.__end = true
+              const text = line.__text = (line.__text || '') + message.text
+              const html = marked.parse(text)
+              line.innerHTML = html
+              list.scrollTop = list.scrollHeight
+              break
+            }
+            case 'append': {
+              const list = document.getElementById('list')
+              let line = list.querySelector('div:last-child')
+              if (!line || line.__end) {
+                line = document.createElement('div')
+                list.appendChild(line)
+              }
+              const text = line.__text = (line.__text || '') + message.text
+              const html = marked.parse(text + '...')
+              line.innerHTML = html
+              list.scrollTop = list.scrollHeight
               break
             }
           }

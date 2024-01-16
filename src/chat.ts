@@ -205,6 +205,7 @@ export async function chat(input?: string) {
   history.push({ content: prompt, role: 'user' })
   outputChannel.appendLine(prompt)
   outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
+  outputChannel.append('')
   const messages: Chat[] = []
   const config = vscode.workspace.getConfiguration()
   const role = config.get<string>('GithubCopilot.chat.role', 'copilot')
