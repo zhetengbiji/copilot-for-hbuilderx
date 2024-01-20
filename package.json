@@ -118,7 +118,7 @@
         "GithubCopilot.proxy.enable": {
           "type": "boolean",
           "default": false,
-          "description": "使用代理服务"
+          "description": "使用指定HTTP代理服务"
         },
         "GithubCopilot.proxy.strictSSL": {
           "type": "boolean",
@@ -128,12 +128,12 @@
         "GithubCopilot.proxy.host": {
           "type": "string",
           "default": "",
-          "description": "代理服务地址（主机名:端口）"
+          "description": "HTTP代理地址（主机名:端口）"
         },
         "GithubCopilot.proxy.user": {
           "type": "string",
           "default": "",
-          "description": "代理服务用户（用户名:密码）"
+          "description": "HTTP代理用户（用户名:密码）"
         },
         "GithubCopilot.chat.role": {
           "type": "string",

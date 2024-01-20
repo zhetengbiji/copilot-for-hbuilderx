@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import vscode = require('vscode')
 import { chat } from './chat'
 import { COPILOT_NAME, EDITOR_NAME, EDITOR_PLUGIN_NAME, VERSION } from './env'
+import { get as getNetworkProxy } from './proxy'
 
 // @ts-ignore
 let hbx: typeof import('hbuilderx')
@@ -73,39 +74,9 @@ const workspaces: Record<string, {}> = {}
 //   return index
 // }
 
-function getNetworkProxy() {
-  const config = vscode.workspace.getConfiguration()
-  const enable = config.get<boolean>('GithubCopilot.proxy.enable')
-  const networkProxy: {
-    host?: string
-    port?: number
-    username?: string
-    password?: string
-    rejectUnauthorized?: boolean
-  } = {}
-  if (enable) {
-    const host = config.get<string>('GithubCopilot.proxy.host') || ''
-    const [_, hostname, port] =
-      host.match(/(?:socks[45]?|https?)?[:：]?\/*([a-z0-9-_.]+)[:：](\d+)/i) ||
-      []
-    if (hostname && port) {
-      networkProxy.host = hostname
-      networkProxy.port = Number(port)
-      const user = config.get<string>('GithubCopilot.proxy.user') || ''
-      const [username, password] = user.split(/[:：]/)
-      if (username && password) {
-        networkProxy.username = username
-        networkProxy.password = password
-      }
-      const strictSSL = config.get<boolean>('GithubCopilot.proxy.strictSSL')
-      networkProxy.rejectUnauthorized = !!strictSSL
-      return { networkProxy }
-    }
-  }
-  return {}
-}
-
 async function setEditorInfo() {
+  const proxy = await getNetworkProxy()
+  console.log('setEditorInfo proxy: ', proxy)
   return await connection.sendRequest<'OK'>(
     'setEditorInfo',
     Object.assign(
@@ -119,7 +90,7 @@ async function setEditorInfo() {
           version: VERSION,
         },
       },
-      getNetworkProxy(),
+      proxy,
     ),
   )
 }
