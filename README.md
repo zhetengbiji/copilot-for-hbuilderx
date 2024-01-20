@@ -33,7 +33,7 @@ GitHub Copilot 受 [GitHub 附加产品条款](https://docs.github.com/en/site-p
 
 - 首次安装后，如使用出现异常，可以尝试重启 HBuilderX。
 - 卸载或者升级失败，可以尝试重启 HBuilderX。
-- 部分地区访问 GitHub Copilot 较慢，可以尝试在编辑器设置中配置 GitHub Copilot 插件代理。
+- 部分地区访问 GitHub Copilot 较慢，可以尝试使用网络代理。
 - GitHub Copilot Chat 为实验性功能，交互方式有待优化。
 
 ## 问题反馈与使用交流
