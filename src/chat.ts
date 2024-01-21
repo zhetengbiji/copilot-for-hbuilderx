@@ -108,6 +108,7 @@ type ResponseData = {
 }
 
 let token: string | null = null
+let expires_at = 0
 
 const HEADERS = {
   'editor-version': 'vscode/1.85.1',
@@ -116,7 +117,7 @@ const HEADERS = {
 }
 
 async function getToken() {
-  if (token) {
+  if (token && expires_at > Date.now()) {
     return token
   }
   const githubToken = getGithubToken()
@@ -139,6 +140,8 @@ async function getToken() {
   console.log('body: ', body)
   token = body.token
   console.log('token: ', token)
+  expires_at = body.expires_at * 1000
+  console.log('expires_at: ', expires_at)
   return token
 }
 
