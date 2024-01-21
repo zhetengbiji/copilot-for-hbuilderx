@@ -1,37 +1,6 @@
-import * as path from 'node:path'
 import * as fs from 'node:fs'
-import vscode = require('vscode')
-// @ts-ignore
-let hbx: typeof import('hbuilderx')
-try {
-  hbx = require('hbuilderx')
-} catch (error) {
-  console.warn('hbuilderx not found')
-}
-
-if (hbx) {
-  vscode.window.createWebviewPanel = function (
-    viewType: string,
-    title: string,
-    showOptions: unknown,
-    options: unknown,
-  ): vscode.WebviewPanel {
-    const panel = hbx.window.createWebView(viewType, options)
-    Object.defineProperty(panel, 'webview', {
-      get() {
-        return this.webView
-      },
-    })
-    panel.reveal = function () {
-      hbx.window.showView({
-        viewid: viewType,
-        containerid: viewType,
-      })
-    }
-    panel.reveal()
-    return panel
-  }
-}
+import { vscode, hbuilderx } from '../define'
+import { HTML_PATH } from '../env'
 
 export const name = 'GitHub Copilot Chat'
 
@@ -98,10 +67,10 @@ export function dispose() {
 }
 
 function initVar(htmlContent: string): string {
-  if (!hbx) {
+  if (!hbuilderx) {
     return htmlContent
   }
-  const config = hbx.workspace.getConfiguration()
+  const config = hbuilderx.workspace.getConfiguration()
   const colorScheme = (
     (config.get('editor.colorScheme') || 'Default') as
       | 'Atom One Dark'
@@ -165,8 +134,8 @@ export function show() {
     webviewPanel.reveal()
     return
   }
-  const htmlPath = path.join(__dirname, '../www/index.html')
-  const htmlContent = initVar(fs.readFileSync(htmlPath, 'utf-8'))
+  
+  const htmlContent = initVar(fs.readFileSync(HTML_PATH, 'utf-8'))
   webviewPanel = vscode.window.createWebviewPanel(
     'github-copilot-chat-activitybar',
     name,

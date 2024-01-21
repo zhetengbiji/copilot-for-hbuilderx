@@ -1,4 +1,4 @@
-import vscode = require('vscode')
+import { vscode } from './define'
 import { get as getSystemProxy } from 'get-system-proxy'
 
 export async function get() {

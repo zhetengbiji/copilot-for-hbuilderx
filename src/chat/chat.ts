@@ -3,8 +3,8 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
-import vscode = require('vscode')
-import { COPILOT_NAME } from './env'
+import { vscode } from '../define'
+import { COPILOT_NAME } from '../env'
 import * as outputChannel from './output'
 
 const COPILOT_INSTRUCTIONS = `
