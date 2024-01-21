@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  vscode-jsonrpc:
-    specifier: ^8.2.0
-    version: 8.2.0
-
 devDependencies:
   '@types/node':
     specifier: ^16
@@ -34,6 +29,9 @@ devDependencies:
   eslint:
     specifier: ^8.56.0
     version: 8.56.0
+  get-system-proxy:
+    specifier: ^1.0.0
+    version: 1.0.0
   node-fetch:
     specifier: ^2.7.0
     version: 2.7.0
@@ -46,6 +44,9 @@ devDependencies:
   uuid:
     specifier: ^9.0.1
     version: 9.0.1
+  vscode-jsonrpc:
+    specifier: ^8.2.0
+    version: 8.2.0
 
 packages:
 
@@ -842,6 +843,10 @@ packages:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
     dev: true
 
+  /get-system-proxy@1.0.0:
+    resolution: {integrity: sha512-n6fXasEoNc+ecl59IZrQK4QqrF+DSHnXTOMVcyJVPTloTT8rNrdanyLa7tzc3y0vXJXKtk1zWb8jOczlZXJtPw==}
+    dev: true
+
   /glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -1259,7 +1264,7 @@ packages:
   /vscode-jsonrpc@8.2.0:
     resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
     engines: {node: '>=14.0.0'}
-    dev: false
+    dev: true
 
   /webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}

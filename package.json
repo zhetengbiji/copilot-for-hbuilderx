@@ -274,9 +274,6 @@
     }
   },
   "extensionDependencies": [],
-  "dependencies": {
-    "vscode-jsonrpc": "^8.2.0"
-  },
   "devDependencies": {
     "@types/node": "^16",
     "@types/node-fetch": "^2.6.9",
@@ -286,9 +283,11 @@
     "@typescript-eslint/parser": "^6.15.0",
     "esbuild": "^0.19.5",
     "eslint": "^8.56.0",
+    "get-system-proxy": "^1.0.0",
     "node-fetch": "^2.7.0",
     "prettier": "^3.1.1",
     "typescript": "^5.2.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "vscode-jsonrpc": "^8.2.0"
   }
 }

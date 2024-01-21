@@ -1,5 +1,5 @@
 import vscode = require('vscode')
-import { get as getSystemProxy } from './system'
+import { get as getSystemProxy } from 'get-system-proxy'
 
 export async function get() {
   const config = vscode.workspace.getConfiguration()
