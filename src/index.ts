@@ -1,5 +1,5 @@
 import { vscode, hbuilderx } from './define'
-import { COPILOT_NAME } from './env'
+import { COPILOT_NAME, HOMEPAGE } from './env'
 import {
   STATUS,
   status,
@@ -12,6 +12,16 @@ import { selector, selectorCache, activate as activateEditor } from './editor'
 import { creatChatHandler, activate as activateChat } from './chat'
 
 async function showQuickPick() {
+  const items: Array<{
+    key: string
+    action?: () => void
+  }> = []
+  const about = {
+    key: '关于本插件',
+    action: () => {
+      vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE))
+    },
+  }
   if (status === STATUS.OK) {
     const config = vscode.workspace.getConfiguration()
     const enableAutoCompletions = !!selectorCache.get('*')
@@ -20,71 +30,87 @@ async function showQuickPick() {
     const languageEnableAutoCompletions = languageId
       ? selector.includes(languageId)
       : enableAutoCompletions
-    const items = [
-      `${COPILOT_NAME} 状态: ${
+    items.push({
+      key: `${COPILOT_NAME} 状态: ${
         languageEnableAutoCompletions ? '正常' : '已禁用'
       }`,
-    ]
-    const toggle = `${enableAutoCompletions ? '禁用' : '启用'}自动补全`
-    items.push(toggle)
-    const toggleLanguage = `${
-      languageEnableAutoCompletions ? '禁用' : '启用'
-    } ${languageId} 的自动补全`
-    if (languageId) {
-      items.push(toggleLanguage)
-    }
-
-    const chatStart = '开始代码聊天'
-    items.push(chatStart)
-    const settings = '打开设置'
-    items.push(settings)
-    const signout = `退出 ${COPILOT_NAME}`
-    items.push(signout)
-    const res = await vscode.window.showQuickPick(items)
-    if (res !== signout) {
-      if (res === toggle || res === toggleLanguage) {
-        if (res === toggleLanguage) {
-          selectorCache.delete(languageId!)
-          selectorCache.set(languageId!, !languageEnableAutoCompletions)
-        } else {
-          selectorCache.set('*', !enableAutoCompletions)
-        }
-        const selectorArray: Array<string> = []
-        for (const [key, val] of selectorCache) {
-          selectorArray.push(`${key}=${val}`)
-        }
-        const selectorString = selectorArray.join(',')
-        await config.update(
-          'GithubCopilot.enable',
-          selectorString,
-          vscode.ConfigurationTarget.Global,
-        )
-        // if (hbuilderx) {
-        //   registerInlineCompletionItemProvider(subscriptions)
-        // }
-      } else if (res === chatStart) {
-        creatChatHandler()()
-      } else if (res === settings) {
-        if (hbuilderx) {
-          hbuilderx.workspace.gotoConfiguration(
-            'GithubCopilot.editor.enableAutoCompletions',
-          )
-        } else {
-          vscode.commands.executeCommand(
-            'workbench.action.openSettings',
-            'GithubCopilot',
-          )
-        }
+    })
+    items.push(about)
+    async function toggle(language: boolean = false) {
+      if (language) {
+        selectorCache.delete(languageId!)
+        selectorCache.set(languageId!, !languageEnableAutoCompletions)
+      } else {
+        selectorCache.set('*', !enableAutoCompletions)
       }
-      return
+      const selectorArray: Array<string> = []
+      for (const [key, val] of selectorCache) {
+        selectorArray.push(`${key}=${val}`)
+      }
+      const selectorString = selectorArray.join(',')
+      await config.update(
+        'GithubCopilot.enable',
+        selectorString,
+        vscode.ConfigurationTarget.Global,
+      )
+      // if (hbuilderx) {
+      //   registerInlineCompletionItemProvider(subscriptions)
+      // }
     }
+    items.push({
+      key: `${enableAutoCompletions ? '禁用' : '启用'}自动补全`,
+      action: toggle,
+    })
+    if (languageId) {
+      items.push({
+        key: `${
+          languageEnableAutoCompletions ? '禁用' : '启用'
+        } ${languageId} 的自动补全`,
+        action: () => toggle(true),
+      })
+    }
+    items.push({
+      key: '开始代码聊天',
+      action: creatChatHandler(),
+    })
+  } else {
+    items.push({ key: `${COPILOT_NAME} 状态: 未登录` })
+    items.push(about)
   }
-  const message = `是否${
-    status === STATUS.OK ? '退出' : '登录'
-  } ${COPILOT_NAME}？`
-  const res = await vscode.window.showInformationMessage(message, '是', '否')
-  if (res === '是') {
-    status === STATUS.OK ? signout() : signin()
+  items.push({
+    key: '打开设置',
+    action: () => {
+      if (hbuilderx) {
+        hbuilderx.workspace.gotoConfiguration(
+          'GithubCopilot.editor.enableAutoCompletions',
+        )
+      } else {
+        vscode.commands.executeCommand(
+          'workbench.action.openSettings',
+          'GithubCopilot',
+        )
+      }
+    },
+  })
+  const title = `${status === STATUS.OK ? '退出' : '登录'} ${COPILOT_NAME}`
+  items.push({
+    key: title,
+    action: async () => {
+      const message = `是否${title}？`
+      const res = await vscode.window.showInformationMessage(
+        message,
+        '是',
+        '否',
+      )
+      if (res === '是') {
+        status === STATUS.OK ? signout() : signin()
+      }
+    },
+  })
+  const res = await vscode.window.showQuickPick(items.map(item => item.key))
+  if (res) {
+    const item = items.find(item => item.key === res)
+    item?.action?.()
   }
 }
 

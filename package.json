@@ -14,6 +14,7 @@
   "bugs": {
     "url": "https://github.com/zhetengbiji/copilot-for-hbuilderx/issues"
   },
+  "homepage": "https://github.com/zhetengbiji/copilot-for-hbuilderx#readme",
   "engines": {
     "HBuilderX": "^3.8.5",
     "vscode": "^1.75.0",
