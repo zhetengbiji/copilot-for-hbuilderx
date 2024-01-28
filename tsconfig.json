@@ -10,5 +10,5 @@
     "rootDir": "src",
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", ".vscode-test", "dist"]
+  "include": ["src"]
 }
