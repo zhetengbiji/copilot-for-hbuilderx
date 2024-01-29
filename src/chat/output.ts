@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 import { vscode, hbuilderx } from '../define'
-import { HTML_PATH } from '../env'
+import { CSS_DARK_PATH, CSS_PATH, HTML_PATH } from '../env'
 
 export const name = 'GitHub Copilot Chat'
 
@@ -66,22 +66,31 @@ export function dispose() {
   // TODO
 }
 
+function getColorScheme() {
+  const config = vscode.workspace.getConfiguration()
+  const colorScheme = (
+    (config.get('editor.colorScheme') || 'Default') as 'Atom One Dark' | 'Monokai' | 'Default'
+  ).toLocaleLowerCase()
+  return colorScheme
+}
+
 function initVar(htmlContent: string): string {
   if (!hbuilderx) {
     return htmlContent
   }
-  const config = hbuilderx.workspace.getConfiguration()
-  const colorScheme = (
-    (config.get('editor.colorScheme') || 'Default') as
-      | 'Atom One Dark'
-      | 'Monokai'
-      | 'Default'
-  ).toLocaleLowerCase()
-  const colorKey = (colorScheme.includes('dark') ? 'dark' : colorScheme) as
-    | 'default'
-    | 'dark'
-    | 'monokai'
+  const colorScheme = getColorScheme()
+  const colorKey = (colorScheme.includes('dark') ? 'dark' : colorScheme) as 'default' | 'dark' | 'monokai'
   const data: Record<string, Record<typeof colorKey, string>> = {
+    '--vscode-background': {
+      default: 'rgb(255,250,232)',
+      dark: 'rgb(33,37,43)',
+      monokai: 'rgb(39,40,34)',
+    },
+    '--vscode-foreground': {
+      default: 'rgb(70,67,60)',
+      dark: 'rgb(179,188,204)',
+      monokai: 'rgb(227,227,227)',
+    },
     '--vscode-editor-background': {
       default: 'rgb(255,250,232)',
       dark: 'rgb(40,44,53)',
@@ -129,13 +138,24 @@ function initVar(htmlContent: string): string {
   return htmlContent
 }
 
+function injectCSS(htmlContent: string) {
+  const colorScheme = getColorScheme()
+  const cssPath = colorScheme === 'default' ? CSS_PATH : CSS_DARK_PATH
+  const cssContent = fs.readFileSync(cssPath, 'utf-8')
+  htmlContent = htmlContent.replace(
+    '<style>',
+    `<style>${cssContent}</style><style>`,
+  )
+  return htmlContent
+}
+
 export function show() {
   if (webviewPanel) {
     webviewPanel.reveal()
     return
   }
 
-  const htmlContent = initVar(fs.readFileSync(HTML_PATH, 'utf-8'))
+  const htmlContent = injectCSS(initVar(fs.readFileSync(HTML_PATH, 'utf-8')))
   webviewPanel = vscode.window.createWebviewPanel(
     'github-copilot-chat-activitybar',
     name,
