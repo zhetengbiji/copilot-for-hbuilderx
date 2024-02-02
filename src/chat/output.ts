@@ -69,7 +69,10 @@ export function dispose() {
 function getColorScheme() {
   const config = vscode.workspace.getConfiguration()
   const colorScheme = (
-    (config.get('editor.colorScheme') || 'Default') as 'Atom One Dark' | 'Monokai' | 'Default'
+    (config.get('editor.colorScheme') || 'Default') as
+      | 'Atom One Dark'
+      | 'Monokai'
+      | 'Default'
   ).toLocaleLowerCase()
   return colorScheme
 }
@@ -79,7 +82,10 @@ function initVar(htmlContent: string): string {
     return htmlContent
   }
   const colorScheme = getColorScheme()
-  const colorKey = (colorScheme.includes('dark') ? 'dark' : colorScheme) as 'default' | 'dark' | 'monokai'
+  const colorKey = (colorScheme.includes('dark') ? 'dark' : colorScheme) as
+    | 'default'
+    | 'dark'
+    | 'monokai'
   const data: Record<string, Record<typeof colorKey, string>> = {
     '--vscode-background': {
       default: 'rgb(255,250,232)',
@@ -150,7 +156,10 @@ function injectCSS(htmlContent: string) {
 }
 
 function fixIndent(code: string, indent: string): string {
-  return code.split('\n').map((line, index) => `${index ? indent : ''}${line}`).join('\n')
+  return code
+    .split('\n')
+    .map((line, index) => `${index ? indent : ''}${line}`)
+    .join('\n')
 }
 
 export function show() {
@@ -181,31 +190,33 @@ export function show() {
             text: line.text,
           })
         })
-        break;
+        break
       case 'input':
-        const input = message.text
         callbacks.forEach(callback => {
-          callback(input)
+          callback(message.text)
         })
-        break;
+        break
       case 'copy':
         vscode.env.clipboard.writeText(message.text)
-        break;
-      case 'insert':
+        break
+      case 'insert': {
         // vscode 接口在 HBuilderX 兼容有问题
         // const editor = vscode.window.activeTextEditor
         const editor = await hbuilderx.window.getActiveTextEditor()
         // @ts-ignore editBuilder type
-        editor?.edit((editBuilder) => {
-          const line = editor.document.getText({
-            start: 0,
-            end: editor.selection.start
-          }).split('\n')
+        editor?.edit(editBuilder => {
+          const line = editor.document
+            .getText({
+              start: 0,
+              end: editor.selection.start,
+            })
+            .split('\n')
           const space = line[line.length - 1].match(/^\s*/)![0]
           const text = fixIndent(message.text, space)
           editBuilder.replace(editor.selection, text)
         })
-        break;
+        break
+      }
     }
   })
   webviewPanel.webview.html = htmlContent
