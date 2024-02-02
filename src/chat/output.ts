@@ -149,6 +149,10 @@ function injectCSS(htmlContent: string) {
   return htmlContent
 }
 
+function fixIndent(code: string, indent: string): string {
+  return code.split('\n').map((line, index) => `${index ? indent : ''}${line}`).join('\n')
+}
+
 export function show() {
   if (webviewPanel) {
     webviewPanel.reveal()
@@ -167,20 +171,41 @@ export function show() {
   webviewPanel.onDidDispose(() => {
     webviewPanel = null
   })
-  webviewPanel.webview.onDidReceiveMessage(message => {
-    if (message.command === 'ready') {
-      ready = true
-      lines.forEach(line => {
-        webviewPanel?.webview.postMessage({
-          command: line.end ? 'appendLine' : 'append',
-          text: line.text,
+  webviewPanel.webview.onDidReceiveMessage(async message => {
+    switch (message.command) {
+      case 'ready':
+        ready = true
+        lines.forEach(line => {
+          webviewPanel?.webview.postMessage({
+            command: line.end ? 'appendLine' : 'append',
+            text: line.text,
+          })
         })
-      })
-    } else if (message.command === 'input') {
-      const input = message.text
-      callbacks.forEach(callback => {
-        callback(input)
-      })
+        break;
+      case 'input':
+        const input = message.text
+        callbacks.forEach(callback => {
+          callback(input)
+        })
+        break;
+      case 'copy':
+        vscode.env.clipboard.writeText(message.text)
+        break;
+      case 'insert':
+        // vscode 接口在 HBuilderX 兼容有问题
+        // const editor = vscode.window.activeTextEditor
+        const editor = await hbuilderx.window.getActiveTextEditor()
+        // @ts-ignore editBuilder type
+        editor?.edit((editBuilder) => {
+          const line = editor.document.getText({
+            start: 0,
+            end: editor.selection.start
+          }).split('\n')
+          const space = line[line.length - 1].match(/^\s*/)![0]
+          const text = fixIndent(message.text, space)
+          editBuilder.replace(editor.selection, text)
+        })
+        break;
     }
   })
   webviewPanel.webview.html = htmlContent
