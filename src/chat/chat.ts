@@ -176,7 +176,7 @@ export async function chat(input?: string) {
     const token = await getToken()
     authorization = `Bearer ${token}`
   } catch (error) {
-    vscode.window.showErrorMessage((error as Error).message)
+    vscode.window.showErrorMessage('Token Error: ' + (error as Error).message)
     return
   }
   const vscodeSessionid = getVscodeSessionid()
@@ -304,7 +304,7 @@ export async function chat(input?: string) {
     console.log('data end')
     if (all.length > 0) {
       const allStr = all.toString()
-      vscode.window.showErrorMessage(allStr)
+      vscode.window.showErrorMessage('Chat Error: ' + allStr)
     }
   })
 }
