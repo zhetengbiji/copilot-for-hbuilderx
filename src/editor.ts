@@ -295,7 +295,7 @@ function registerInlineCompletionItemProvider(
             !(
               (enableAutoCompletions &&
                 context.triggerKind ===
-                  vscode.InlineCompletionTriggerKind.Automatic) ||
+                vscode.InlineCompletionTriggerKind.Automatic) ||
               context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke
             )
           ) {
@@ -372,13 +372,13 @@ function registerInlineCompletionItemProvider(
               const range = completion.range
               const start = range.start
               const end = range.end
-              const completionText = completion.text.trimEnd()
+              const completionText = completion.displayText.trimEnd()
               const codeRange = new vscode.Range(
                 new vscode.Position(start.line, positionLeft),
                 new vscode.Position(end.line, end.character),
               )
               items.push({
-                insertText: completionText.substring(positionLeft),
+                insertText: completionText,
                 range: codeRange,
               })
             }
