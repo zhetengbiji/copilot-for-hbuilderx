@@ -39,6 +39,9 @@ The user works in an IDE called Visual Studio Code which has a concept for edito
 The active document is the source code the user is looking at right now.
 You can only give one reply for each conversation turn.
 Respond in the following locale: zh-cn`
+const COPILOT_HELLO = `欢迎{{USER}}，我是你的 Copilot，可随时帮助你更快完成工作。
+
+我由 AI 提供支持，因此可能会出现意外和错误。请确保验证生成的任何代码或建议。`
 
 let githubToken: {
   user: string
@@ -161,12 +164,19 @@ function getMachineid() {
 type Chat = { content: string; role: string }
 
 const history: Chat[] = []
+let isFirst = true
 
 export async function chat(input?: string) {
   const document = vscode.window.activeTextEditor?.document
   const code =
     document?.getText(vscode.window.activeTextEditor!.selection) || ''
   outputChannel.show()
+  if (isFirst) {
+    isFirst = false
+    const user = getGithubToken()?.user
+    outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
+    outputChannel.appendLine(`${COPILOT_HELLO.replace('{{USER}}', user ? ' @' + user : '')}`)
+  }
   const prompt = input || ''
   if (!prompt) {
     return
