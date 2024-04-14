@@ -6,6 +6,7 @@ import fetch from 'node-fetch'
 import { vscode } from '../define'
 import { COPILOT_NAME } from '../env'
 import * as outputChannel from './output'
+import { positionToNumber } from '../utils'
 
 const COPILOT_INSTRUCTIONS = `
 You are an AI programming assistant.
@@ -168,14 +169,16 @@ let isFirst = true
 
 export async function chat(input?: string) {
   const document = vscode.window.activeTextEditor?.document
-  const code =
-    document?.getText(vscode.window.activeTextEditor!.selection) || ''
+  const selection = vscode.window.activeTextEditor!.selection
+  const code = document?.getText(selection) || ''
   outputChannel.show()
   if (isFirst) {
     isFirst = false
     const user = getGithubToken()?.user
     outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
-    outputChannel.appendLine(`${COPILOT_HELLO.replace('{{USER}}', user ? ' @' + user : '')}`)
+    outputChannel.appendLine(
+      `${COPILOT_HELLO.replace('{{USER}}', user ? ' @' + user : '')}`,
+    )
   }
   const prompt = input || ''
   if (!prompt) {
@@ -213,7 +216,13 @@ export async function chat(input?: string) {
       content: `Active selection:\n\n\nFrom the file: ${document.fileName}\n\`\`\`${document.languageId}\n${code}\n\`\`\`\n\n`,
       role: 'user',
     })
-    outputChannel.appendLine(`Used 1 reference: ${fileName}:${code.length}`)
+    const source = document.getText()
+    outputChannel.appendLine(
+      `Used 1 reference: ${fileName}: ${positionToNumber(
+        selection.start,
+        source,
+      )}-${positionToNumber(selection.end, source)}`,
+    )
   }
   history.push({ content: prompt, role: 'user' })
   outputChannel.appendLine(prompt)

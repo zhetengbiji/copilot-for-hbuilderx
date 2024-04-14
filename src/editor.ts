@@ -7,16 +7,6 @@ import { EDITOR_NAME, EDITOR_PLUGIN_NAME, VERSION } from './env'
 
 const workspaces: Record<string, {}> = {}
 
-// function positionToNumber(position: vscode.Position, source: string): number {
-//   const lines = source.split('\n')
-//   let index = 0
-//   for (let i = 0; i < position.line; i++) {
-//     index += lines[i].length + 1
-//   }
-//   index += position.character
-//   return index
-// }
-
 async function setEditorInfo() {
   const proxy = await getNetworkProxy()
   console.log('setEditorInfo proxy: ', proxy)
@@ -295,7 +285,7 @@ function registerInlineCompletionItemProvider(
             !(
               (enableAutoCompletions &&
                 context.triggerKind ===
-                vscode.InlineCompletionTriggerKind.Automatic) ||
+                  vscode.InlineCompletionTriggerKind.Automatic) ||
               context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke
             )
           ) {
