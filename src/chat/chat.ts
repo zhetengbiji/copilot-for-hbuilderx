@@ -166,6 +166,7 @@ type Chat = { content: string; role: string }
 
 const history: Chat[] = []
 let isFirst = true
+let currentController: AbortController | null = null
 
 export async function chat(input?: string) {
   const document = vscode.window.activeTextEditor?.document
@@ -247,11 +248,8 @@ export async function chat(input?: string) {
     messages: messages.concat(history),
   }
   console.log('data: ', data)
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(data),
-  })
+
+  currentController = new AbortController()
   function receive(obj: {
     choices?: {
       index: number
@@ -289,43 +287,70 @@ export async function chat(input?: string) {
       outputChannel.append(content)
     }
   }
-  let all = Buffer.alloc(0)
-  res.body.on('data', (data: Uint8Array) => {
-    console.log('data chunk: ', data.toString())
-    all = Buffer.concat([all, data])
-    let next = true
-    while (next) {
-      const allStr = all.toString()
-      const start = 'data: '
-      const res = allStr.startsWith(start)
-      if (res) {
-        const endStr = '\n\n'
-        const index = allStr.indexOf(endStr)
-        if (index > 0) {
-          const body = allStr.substring(6, index)
-          if (body === '[DONE]') {
-            all = Buffer.alloc(0)
-            outputChannel.appendLine('')
-            break
+  try {
+    outputChannel.updateLoading(true)
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+      signal: currentController.signal as any,
+    })
+    let all = Buffer.alloc(0)
+    res.body.on('data', (data: Uint8Array) => {
+      console.log('data chunk: ', data.toString())
+      all = Buffer.concat([all, data])
+      let next = true
+      while (next) {
+        const allStr = all.toString()
+        const start = 'data: '
+        const res = allStr.startsWith(start)
+        if (res) {
+          const endStr = '\n\n'
+          const index = allStr.indexOf(endStr)
+          if (index > 0) {
+            const body = allStr.substring(6, index)
+            if (body === '[DONE]') {
+              all = Buffer.alloc(0)
+              outputChannel.appendLine('')
+              break
+            }
+            const obj = JSON.parse(body)
+            receive(obj)
+            all = all.slice(Buffer.from(start + body + endStr).length)
+          } else {
+            next = false
           }
-          const obj = JSON.parse(body)
-          receive(obj)
-          all = all.slice(Buffer.from(start + body + endStr).length)
         } else {
           next = false
         }
-      } else {
-        next = false
       }
-    }
-  })
-  res.body.on('end', () => {
-    console.log('data end')
-    if (all.length > 0) {
-      const allStr = all.toString()
-      vscode.window.showErrorMessage('Chat Error: ' + allStr)
-    }
-  })
+    })
+    res.body.on('end', () => {
+      console.log('data end')
+      if (all.length > 0) {
+        const allStr = all.toString()
+        vscode.window.showErrorMessage('Chat Error: ' + allStr)
+      }
+      currentController = null
+      outputChannel.updateLoading(false)
+    })
+    res.body.on('error', (error: Error) => {
+      console.error('fetch error:', error)
+      currentController = null
+      outputChannel.updateLoading(false)
+    })
+  } catch (error) {
+    console.log('fetch error: ', error)
+    currentController = null
+    outputChannel.updateLoading(false)
+  }
+}
+
+function stop() {
+  if (currentController) {
+    currentController.abort()
+  }
 }
 
 outputChannel.onInput(chat)
+outputChannel.onStop(stop)

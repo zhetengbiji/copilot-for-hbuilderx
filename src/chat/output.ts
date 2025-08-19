@@ -190,10 +190,19 @@ export function show() {
             text: line.text,
           })
         })
+        webviewPanel?.webview.postMessage({
+          command: 'updateLoading',
+          loading,
+        })
         break
       case 'input':
-        callbacks.forEach(callback => {
+        onInputCallbacks.forEach(callback => {
           callback(message.text)
+        })
+        break
+      case 'stop':
+        onStopCallbacks.forEach(callback => {
+          callback()
         })
         break
       case 'copy':
@@ -224,8 +233,26 @@ export function show() {
 
 type InputCallback = (input: string) => void
 
-const callbacks: Array<InputCallback> = []
+const onInputCallbacks: Array<InputCallback> = []
 
 export function onInput(callback: InputCallback) {
-  callbacks.push(callback)
+  onInputCallbacks.push(callback)
+}
+
+const onStopCallbacks: Array<() => void> = []
+
+export function onStop(callback: () => void) {
+  onStopCallbacks.push(callback)
+}
+
+let loading = false
+
+export function updateLoading(value: boolean) {
+  loading = value
+  if (ready) {
+    webviewPanel?.webview.postMessage({
+      command: 'updateLoading',
+      loading,
+    })
+  }
 }
