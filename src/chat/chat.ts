@@ -240,7 +240,7 @@ export async function chat(input?: string) {
   }
   const data = {
     intent: true,
-    model: 'gpt-4',
+    model: 'gpt-4.1',
     n: 1,
     stream: true,
     temperature: 0.1,
