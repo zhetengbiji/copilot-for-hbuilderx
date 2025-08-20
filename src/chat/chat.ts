@@ -168,6 +168,14 @@ const history: Chat[] = []
 let isFirst = true
 let currentController: AbortController | null = null
 
+function sayHello() {
+  const user = getGithubToken()?.user
+  outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
+  outputChannel.appendLine(
+    `${COPILOT_HELLO.replace('{{USER}}', user ? ' @' + user : '')}`,
+  )
+}
+
 export async function chat(input?: string) {
   const document = vscode.window.activeTextEditor?.document
   const selection = vscode.window.activeTextEditor!.selection
@@ -175,11 +183,7 @@ export async function chat(input?: string) {
   outputChannel.show()
   if (isFirst) {
     isFirst = false
-    const user = getGithubToken()?.user
-    outputChannel.appendLine(`🤖 ${COPILOT_NAME}:`)
-    outputChannel.appendLine(
-      `${COPILOT_HELLO.replace('{{USER}}', user ? ' @' + user : '')}`,
-    )
+    sayHello()
   }
   const prompt = input || ''
   if (!prompt) {
@@ -352,5 +356,15 @@ function stop() {
   }
 }
 
+async function add() {
+  if (currentController) {
+    currentController.abort()
+    await Promise.resolve()
+  }
+  outputChannel.clear()
+  sayHello()
+}
+
 outputChannel.onInput(chat)
 outputChannel.onStop(stop)
+outputChannel.onAdd(add)

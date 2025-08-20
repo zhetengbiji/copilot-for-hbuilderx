@@ -55,7 +55,12 @@ export function replace() {
 }
 
 export function clear() {
-  // TODO
+  lines.length = 0
+  if (ready) {
+    webviewPanel?.webview.postMessage({
+      command: 'clear',
+    })
+  }
 }
 
 export function hide() {
@@ -205,6 +210,11 @@ export function show() {
           callback()
         })
         break
+      case 'add':
+        onAddCallbacks.forEach(callback => {
+          callback()
+        })
+        break
       case 'copy':
         vscode.env.clipboard.writeText(message.text)
         break
@@ -243,6 +253,11 @@ const onStopCallbacks: Array<() => void> = []
 
 export function onStop(callback: () => void) {
   onStopCallbacks.push(callback)
+}
+
+const onAddCallbacks: Array<() => void> = []
+export function onAdd(callback: () => void) {
+  onAddCallbacks.push(callback)
 }
 
 let loading = false
